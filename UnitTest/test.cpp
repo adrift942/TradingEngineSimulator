@@ -80,13 +80,15 @@ TEST_F(OrderBookTest, Buy3)
 TEST_F(OrderBookTest, CancelOrder1)
 {
 	auto order = Order(true, 9.98f, 12000.f);
-	auto orderId = orderBook.InsertOrder(order);
-	auto success = orderBook.CancelOrder(orderId);
+	order.id = 1;
+	orderBook.InsertOrder(order);
+	auto success = orderBook.CancelOrder(1);
 	EXPECT_TRUE(success);
 
 	order = Order(false, 10.05f, 2000.f);
-	orderId = orderBook.InsertOrder(order);
-	success = orderBook.CancelOrder(orderId);
+	order.id = 2;
+	orderBook.InsertOrder(order);
+	success = orderBook.CancelOrder(2);
 	EXPECT_TRUE(success);
 
 	OrderBook res;

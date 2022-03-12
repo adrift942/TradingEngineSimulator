@@ -1,1 +1,1 @@
-better system to look for next best bid/ask price with double linked list
+order id is assigned by matching engine instead of order book

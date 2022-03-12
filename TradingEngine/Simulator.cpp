@@ -2,9 +2,9 @@
 
 Simulator::Simulator(const MatchingEngine& engine, const Client& client)
 {
-	m_engine = engine;
-	m_client = client;
-	m_marketDataStreamer = MarketDataStreamer();
+	//m_engine = engine;
+	//m_client = client;
+	//m_marketDataStreamer = MarketDataStreamer();
 }
 
 void Simulator::Start()

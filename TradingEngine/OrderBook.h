@@ -4,8 +4,6 @@
 #include <map>
 #include "Order.h"
 
-static OrderId orderIdCount = 0;
-
 
 class OrderBook
 {
@@ -18,10 +16,11 @@ public:
 
 	inline float GetBestAskAmount() const { return m_asks.front().front().unfilledAmount; };
 
-	OrderId InsertOrder(const Order& i_order)
+	inline bool OrderExists(const OrderId& orderId) const { return m_ordersMap.count(orderId) > 0; }
+
+	void InsertOrder(const Order& i_order)
 	{
 		auto order = i_order;
-		order.id = ++orderIdCount;
 
 		if (order.isBuy)
 		{
@@ -72,7 +71,7 @@ public:
 					}
 				}
 
-				m_ordersMap[orderIdCount] = order;
+				m_ordersMap[order.id] = order;
 			}
 		}
 		else
@@ -124,29 +123,29 @@ public:
 					}
 				}
 
-				m_ordersMap[orderIdCount] = order;
+				m_ordersMap[order.id] = order;
 			}
 		}
-
-		return orderIdCount;
 	}
 
-	bool AmendOrder(const OrderId& orderId, const Order& order)
+	bool AmendOrder(const OrderId& orderId, const Order& i_order)
 	{
 		auto res = CancelOrder(orderId);
 		if (!res)
 			return false;
 
+		auto order = i_order;
+		order.id = orderId;
 		InsertOrder(order);
 		return true;
 	}
 		
 	bool CancelOrder(const OrderId& orderId)
 	{
-		if (m_ordersMap.count(orderId) == 0)
+		if (!OrderExists(orderId))
 			return false;
 
-		auto order = m_ordersMap[orderId];
+		const auto order = m_ordersMap[orderId];
 		m_ordersMap.erase(orderId);
 
 		if (order.isBuy)
@@ -163,7 +162,7 @@ public:
 				{
 					prevIt = it;
 					it++;
-					if (order.price > it->front().price)
+					if (it == m_bids.end() || order.price > it->front().price)
 						return false;
 				}
 				auto res = CancelOrderFromQueue(order.id, *it);
@@ -189,7 +188,7 @@ public:
 				{
 					prevIt = it;
 					it++;
-					if (order.price < it->front().price)
+					if (it == m_asks.end() || order.price < it->front().price)
 						return false;
 				}
 				auto res = CancelOrderFromQueue(order.id, *it);
