@@ -1,7 +1,10 @@
 #pragma once
+#include "Common.h"
+
 class Trade
 {
-	float filledAmount;
-	float AveragePrice;
+	Timestamp executionTime;
+	float OriginalAmount;
+	float FilledAmount;
 };
 

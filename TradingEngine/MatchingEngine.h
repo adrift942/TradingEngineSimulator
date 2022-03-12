@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <memory>
 #include <map>
+#include <deque>
 #include "Order.h"
 #include "Ack.h"
 #include "OrderBook.h"
@@ -18,11 +19,11 @@ public:
 
 	void CancelOrder(const OrderId& orderId);
 
-	inline void ReceiveMarketData(const OrderBook& orderBook) { m_orderBook = orderBook; };
+	inline void ReceiveMarketData(const OrderBook& orderBook) { m_orderBook = std::make_shared<OrderBook>(orderBook); };
 
 private:
-	OrderBook m_orderBook{}; /*Current order book*/
+	std::shared_ptr<OrderBook> m_orderBook{}; /*Current order book*/
 
-	std::map<OrderId, Order> m_clientOrders{}; /*Maps pending order ids to orders*/
+	std::shared_ptr<std::deque<Order>> m_ordersQueue{};
 };
 

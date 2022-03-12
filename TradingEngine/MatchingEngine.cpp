@@ -7,12 +7,8 @@ void MatchingEngine::InsertOrder(const Order& i_order)
 	// validation
 
 	// if validation ok
-
-	auto order = i_order;
-	float tradeAmount;
-
-	// try match order
-	
+		
+	m_ordersQueue->push_back(i_order);	
 }
 
 void MatchingEngine::AmendOrder(const OrderId& orderId, const Order& order)
@@ -20,7 +16,7 @@ void MatchingEngine::AmendOrder(const OrderId& orderId, const Order& order)
 	// validation
 
 	// if validation ok
-	m_clientOrders[orderId] = order;
+	m_orderBook->AmendOrder(orderId, order);
 }
 
 void MatchingEngine::CancelOrder(const OrderId& orderId)
@@ -28,7 +24,7 @@ void MatchingEngine::CancelOrder(const OrderId& orderId)
 	// validation
 
 	// if validation ok
-	m_clientOrders.erase(orderId);
+	m_orderBook->CancelOrder(orderId);
 }
 
 

@@ -15,7 +15,7 @@ void Simulator::Start()
 		m_engine.ReceiveMarketData(data);
 
 		// client random actions
-		auto order = Order(true, 10.05, 19000);
-		m_client.InsertOrder(order);
+		auto order = Order(true, 10.05f, 19000.f);
+		//m_client.InsertOrder(order);
 	}
 }

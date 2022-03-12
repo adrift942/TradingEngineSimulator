@@ -4,6 +4,6 @@
 class MarketDataStreamer
 {
 public:
-	OrderBook& GetData() const;
+	OrderBook GetData() const;
 };
 

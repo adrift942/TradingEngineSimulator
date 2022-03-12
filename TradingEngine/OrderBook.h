@@ -1,36 +1,42 @@
 #pragma once
 #include <deque>
 #include <forward_list>
-#include <algorithm>
+#include <map>
 #include "Order.h"
 
+static OrderId orderIdCount = 0;
 
 
-struct OrderBook
+class OrderBook
 {
-	std::forward_list<std::deque<Order>> bids;
-	std::forward_list<std::deque<Order>> asks;
+public:
+	inline float GetBestBidPrice() const { return m_bids.front().front().price; };
 
-	float GetBestBidPrice() { return bids.front().front().price; }
-	float GetBestAskPrice() { return asks.front().front().price; }
+	inline float GetBestAskPrice() const { return m_asks.front().front().price; };
 
-	void InsertOrder(const Order& i_order)
+	inline float GetBestBidAmount() const { return m_bids.front().front().unfilledAmount; };
+
+	inline float GetBestAskAmount() const { return m_asks.front().front().unfilledAmount; };
+
+	OrderId InsertOrder(const Order& i_order)
 	{
 		auto order = i_order;
+		order.id = ++orderIdCount;
+
 		if (order.isBuy)
 		{
 			while (order.unfilledAmount > 0 && order.price >= GetBestAskPrice())
 			{
-				float tradeAmount = std::min(order.unfilledAmount, asks.front().front().unfilledAmount);
+				float tradeAmount = std::min(order.unfilledAmount, m_asks.front().front().unfilledAmount);
 				order.unfilledAmount -= tradeAmount;
-				asks.front().front().unfilledAmount -= tradeAmount;
+				m_asks.front().front().unfilledAmount -= tradeAmount;
 
-				if (asks.front().front().unfilledAmount == 0)
+				if (m_asks.front().front().unfilledAmount == 0)
 				{
-					asks.front().pop_front();
-					if (asks.front().empty())
+					m_asks.front().pop_front();
+					if (m_asks.front().empty())
 					{
-						asks.pop_front();
+						m_asks.pop_front();
 					}
 				}
 			}
@@ -40,51 +46,171 @@ struct OrderBook
 				if (order.price > GetBestBidPrice())
 				{
 					auto tmp = std::deque<Order>{ order };
-					bids.push_front(tmp);
-				}
-				else if (order.price == GetBestBidPrice())
-				{
-					bids.front().push_back(order);
+					m_bids.push_front(tmp);
 				}
 				else
 				{
-					auto it = bids.begin();
+					auto it = m_bids.begin();
 					auto prevIt = it;
-					//auto frontPrice = (*it).front().price;
-					while (order.price < (*it).front().price)
+					while (order.price < it->front().price)
 					{
 						prevIt = it;
 						it++;
-						//frontPrice = (*it).front().price;
 					}
-					if ((*prevIt).front().price == order.price)
+					if (prevIt == it)
 					{
-						(*prevIt).push_back(order);
+						m_bids.front().push_back(order);
+					}
+					else if (prevIt->front().price == order.price)
+					{
+						prevIt->push_back(order);
 					}
 					else
 					{
 						auto tmp = std::deque<Order>{ order };
-						bids.insert_after(prevIt, tmp);
+						m_bids.insert_after(prevIt, tmp);
 					}
 				}
+
+				m_ordersMap[orderIdCount] = order;
 			}
 		}
 		else
 		{
+			while (order.unfilledAmount > 0 && order.price <= GetBestBidPrice())
+			{
+				float tradeAmount = std::min(order.unfilledAmount, m_bids.front().front().unfilledAmount);
+				order.unfilledAmount -= tradeAmount;
+				m_bids.front().front().unfilledAmount -= tradeAmount;
 
+				if (m_bids.front().front().unfilledAmount == 0)
+				{
+					m_bids.front().pop_front();
+					if (m_bids.front().empty())
+					{
+						m_bids.pop_front();
+					}
+				}
+			}
+
+			if (order.unfilledAmount > 0)
+			{
+				if (order.price < GetBestAskPrice())
+				{
+					auto tmp = std::deque<Order>{ order };
+					m_asks.push_front(tmp);
+				}
+				else
+				{
+					auto it = m_asks.begin();
+					auto prevIt = it;
+					while (order.price > it->front().price)
+					{
+						prevIt = it;
+						it++;
+					}
+					if (prevIt == it)
+					{
+						m_asks.front().push_back(order);
+					}
+					else if (prevIt->front().price == order.price)
+					{
+						prevIt->push_back(order);
+					}
+					else
+					{
+						auto tmp = std::deque<Order>{ order };
+						m_asks.insert_after(prevIt, tmp);
+					}
+				}
+
+				m_ordersMap[orderIdCount] = order;
+			}
 		}
 
-		// if there is some unfilled quantity
-		//if (order.unfilledAmount > 0)
-		//	insert(std::pair<OrderId, Order>(order.id, order));
+		return orderIdCount;
 	}
 
-	bool operator==(OrderBook& other) const
+	bool AmendOrder(const OrderId& orderId, const Order& order)
 	{
-		auto it1 = asks.begin();
-		auto it2 = other.asks.begin();
+		auto res = CancelOrder(orderId);
+		if (!res)
+			return false;
 
-		while (it1 != asks.end() && it2 != other.asks.end())
+		InsertOrder(order);
+		return true;
+	}
+		
+	bool CancelOrder(const OrderId& orderId)
+	{
+		if (m_ordersMap.count(orderId) == 0)
+			return false;
+
+		auto order = m_ordersMap[orderId];
+		m_ordersMap.erase(orderId);
+
+		if (order.isBuy)
+		{
+			if (order.price > GetBestBidPrice())
+			{
+				return false;
+			}
+			else
+			{
+				auto it = m_bids.begin();
+				auto prevIt = it;
+				while (order.price != it->front().price)
+				{
+					prevIt = it;
+					it++;
+					if (order.price > it->front().price)
+						return false;
+				}
+				auto res = CancelOrderFromQueue(order.id, *it);
+				if (it->size() == 0)
+					if (it == prevIt)
+						m_bids.pop_front();
+					else
+						m_bids.erase_after(prevIt);
+				return res;
+			}
+		}
+		else
+		{
+			if (order.price < GetBestAskPrice())
+			{
+				return false;
+			}
+			else
+			{
+				auto it = m_asks.begin();
+				auto prevIt = it;
+				while (order.price != it->front().price)
+				{
+					prevIt = it;
+					it++;
+					if (order.price < it->front().price)
+						return false;
+				}
+				auto res = CancelOrderFromQueue(order.id, *it);
+				if (it->size() == 0)
+					if (it == prevIt)
+						m_asks.pop_front();
+					else
+						m_asks.erase_after(prevIt);
+				return res;
+			}
+		}
+
+		return true;
+	}
+
+	bool operator==(const OrderBook& other) const
+	{
+		auto it1 = m_asks.begin();
+		auto it2 = other.m_asks.begin();
+
+		while (it1 != m_asks.end() && it2 != other.m_asks.end())
 		{
 			auto q1 = *it1;
 			auto q2 = *it2;
@@ -103,9 +229,36 @@ struct OrderBook
 			it2++;
 		}
 
-		if (it1 != asks.end() || it2 != other.asks.end())
+		if (it1 != m_asks.end() || it2 != other.m_asks.end())
 			return false;
 
 		return true;
 	}
+
+	bool operator!=(const OrderBook& other) const
+	{
+		return !(*this == other);
+	}
+
+private:
+	bool CancelOrderFromQueue(const OrderId& orderId, std::deque<Order>& queue)
+	{
+		auto it = queue.begin();
+		while (it != queue.end())
+		{
+			if (it->id == orderId)
+			{
+				queue.erase(it);
+				return true;
+			}
+		}
+		return false;
+	}
+
+public:
+	std::forward_list<std::deque<Order>> m_bids;
+	std::forward_list<std::deque<Order>> m_asks;
+
+private:
+	std::map<OrderId, Order> m_ordersMap; // auxiliary map for faster lookup of orders in the orderbook	
 };

@@ -5,8 +5,8 @@
 
 int main()
 {
-    auto engine = MatchingEngine();
-    auto client = Client();
-    auto simulator = Simulator(engine, client);
-    simulator.Start();
+    //auto engine = MatchingEngine();
+    //auto client = Client();
+    //auto simulator = Simulator(engine, client);
+    //simulator.Start();
 }

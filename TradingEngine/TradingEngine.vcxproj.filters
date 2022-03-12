@@ -63,7 +63,7 @@
       <Filter>Header Files\data_types</Filter>
     </ClInclude>
     <ClInclude Include="OrderBook.h">
-      <Filter>Header Files\data_types</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
