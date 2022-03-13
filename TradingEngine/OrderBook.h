@@ -12,21 +12,37 @@ class OrderBook
 public:
 	float GetBestBidPrice() const
 	{
+		if (m_bids.empty())
+			throw std::exception("Order book has no bids");
+		else if (m_bids.front().empty())
+			throw std::exception("Best bid is empty and has not been removed");
 		return m_bids.front().front().price;
 	};
 
 	float GetBestAskPrice() const
 	{
+		if (m_asks.empty())
+			throw std::exception("Order book has no asks");
+		else if (m_asks.front().empty())
+			throw std::exception("Best ask is empty and has not been removed");
 		return m_asks.front().front().price;
 	};
 
 	float GetBestBidAmount() const
 	{
+		if (m_bids.empty())
+			throw std::exception("Order book has no bids");
+		else if (m_bids.front().empty())
+			throw std::exception("Best bid is empty and has not been removed");
 		return m_bids.front().front().unfilledAmount;
 	};
 
 	float GetBestAskAmount() const
 	{
+		if (m_asks.empty())
+			throw std::exception("Order book has no asks");
+		else if (m_asks.front().empty())
+			throw std::exception("Best ask is empty and has not been removed");
 		return m_asks.front().front().unfilledAmount;
 	};
 
@@ -38,111 +54,13 @@ public:
 	void InsertOrder(const Order& i_order)
 	{
 		auto order = i_order;
+		
+		// Execute order if it is marketable
+		ExecuteOrder(order);
 
-		if (order.isBuy)
-		{
-			while (order.unfilledAmount > 0 && order.price >= GetBestAskPrice())
-			{
-				float tradeAmount = std::min(order.unfilledAmount, m_asks.front().front().unfilledAmount);
-				order.unfilledAmount -= tradeAmount;
-				m_asks.front().front().unfilledAmount -= tradeAmount;
-
-				if (FloatEqual(m_asks.front().front().unfilledAmount, 0))
-				{
-					m_asks.front().pop_front();
-					if (m_asks.front().empty())
-					{
-						m_asks.pop_front();
-					}
-				}
-			}
-
-			if (order.unfilledAmount > 0)
-			{
-				if (order.price > GetBestBidPrice())
-				{
-					auto tmp = std::deque<Order>{ order };
-					m_bids.push_front(tmp);
-				}
-				else
-				{
-					auto it = m_bids.begin();
-					auto prevIt = it;
-					while (order.price < it->front().price)
-					{
-						prevIt = it;
-						it++;
-					}
-					if (prevIt == it)
-					{
-						m_bids.front().push_back(order);
-					}
-					else if (FloatEqual(prevIt->front().price, order.price))
-					{
-						prevIt->push_back(order);
-					}
-					else
-					{
-						auto tmp = std::deque<Order>{ order };
-						m_bids.insert_after(prevIt, tmp);
-					}
-				}
-
-				m_ordersMap[order.id] = order;
-			}
-		}
-		else
-		{
-			while (order.unfilledAmount > 0 && order.price <= GetBestBidPrice())
-			{
-				float tradeAmount = std::min(order.unfilledAmount, m_bids.front().front().unfilledAmount);
-				order.unfilledAmount -= tradeAmount;
-				m_bids.front().front().unfilledAmount -= tradeAmount;
-
-				if (FloatEqual(m_bids.front().front().unfilledAmount, 0))
-				{
-					m_bids.front().pop_front();
-					if (m_bids.front().empty())
-					{
-						m_bids.pop_front();
-					}
-				}
-			}
-
-			if (order.unfilledAmount > 0)
-			{
-				if (order.price < GetBestAskPrice())
-				{
-					auto tmp = std::deque<Order>{ order };
-					m_asks.push_front(tmp);
-				}
-				else
-				{
-					auto it = m_asks.begin();
-					auto prevIt = it;
-					while (order.price > it->front().price)
-					{
-						prevIt = it;
-						it++;
-					}
-					if (prevIt == it)
-					{
-						m_asks.front().push_back(order);
-					}
-					else if (FloatEqual(prevIt->front().price, order.price))
-					{
-						prevIt->push_back(order);
-					}
-					else
-					{
-						auto tmp = std::deque<Order>{ order };
-						m_asks.insert_after(prevIt, tmp);
-					}
-				}
-
-				m_ordersMap[order.id] = order;
-			}
-		}
+		// Insert order in the order book is it was not marketable or if some unfilled amount is left
+		if (FloatGreaterThan(order.unfilledAmount, 0))
+			InsertPendingOrder(order);		
 	}
 
 	bool AmendOrder(const OrderId& orderId, const Order& i_order)
@@ -257,6 +175,114 @@ public:
 	}
 
 private:
+	void ExecuteOrder(Order& order)
+	{
+		if (order.isBuy)
+		{
+			while (order.unfilledAmount > 0 && order.price >= GetBestAskPrice())
+			{
+				float tradeAmount = std::min(order.unfilledAmount, m_asks.front().front().unfilledAmount);
+				order.unfilledAmount -= tradeAmount;
+				m_asks.front().front().unfilledAmount -= tradeAmount;
+
+				if (FloatEqual(m_asks.front().front().unfilledAmount, 0))
+				{
+					m_asks.front().pop_front();
+					if (m_asks.front().empty())
+					{
+						m_asks.pop_front();
+					}
+				}
+			}
+		}
+		else
+		{
+			while (order.unfilledAmount > 0 && order.price <= GetBestBidPrice())
+			{
+				float tradeAmount = std::min(order.unfilledAmount, m_bids.front().front().unfilledAmount);
+				order.unfilledAmount -= tradeAmount;
+				m_bids.front().front().unfilledAmount -= tradeAmount;
+
+				if (FloatEqual(m_bids.front().front().unfilledAmount, 0))
+				{
+					m_bids.front().pop_front();
+					if (m_bids.front().empty())
+					{
+						m_bids.pop_front();
+					}
+				}
+			}
+		}
+	}
+
+	void InsertPendingOrder(Order& order)
+	{
+		if (order.isBuy)
+		{
+			if (order.price > GetBestBidPrice())
+			{
+				auto tmp = std::deque<Order>{ order };
+				m_bids.push_front(tmp);
+			}
+			else
+			{
+				auto it = m_bids.begin();
+				auto prevIt = it;
+				while (order.price < it->front().price)
+				{
+					prevIt = it;
+					it++;
+				}
+				if (prevIt == it)
+				{
+					m_bids.front().push_back(order);
+				}
+				else if (FloatEqual(prevIt->front().price, order.price))
+				{
+					prevIt->push_back(order);
+				}
+				else
+				{
+					auto tmp = std::deque<Order>{ order };
+					m_bids.insert_after(prevIt, tmp);
+				}
+			}
+		}
+		else
+		{
+			if (order.price < GetBestAskPrice())
+			{
+				auto tmp = std::deque<Order>{ order };
+				m_asks.push_front(tmp);
+			}
+			else
+			{
+				auto it = m_asks.begin();
+				auto prevIt = it;
+				while (order.price > it->front().price)
+				{
+					prevIt = it;
+					it++;
+				}
+				if (prevIt == it)
+				{
+					m_asks.front().push_back(order);
+				}
+				else if (FloatEqual(prevIt->front().price, order.price))
+				{
+					prevIt->push_back(order);
+				}
+				else
+				{
+					auto tmp = std::deque<Order>{ order };
+					m_asks.insert_after(prevIt, tmp);
+				}
+			}
+		}
+
+		m_ordersMap[order.id] = order;
+	}
+
 	bool CancelOrderFromQueue(const OrderId& orderId, std::deque<Order>& queue)
 	{
 		auto it = queue.begin();

@@ -7,3 +7,8 @@ static bool FloatEqual(float a, float b)
 {
     return abs(a - b) < TICK;
 }
+
+static bool FloatGreaterThan(float a, float b)
+{
+    return abs(a - b) > TICK;
+}

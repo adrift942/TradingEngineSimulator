@@ -44,7 +44,7 @@ private:
 	void ProcessingQueue();
 
 private:
-	OrderBook m_orderBook{}; /*Current order book*/
+	OrderBook m_orderBook{};
 
 	std::shared_ptr<std::deque<Transaction>> m_transactionsQueue = 0;
 	mutable std::mutex m_mu;
