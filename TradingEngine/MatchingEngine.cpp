@@ -1,9 +1,10 @@
 #include "MatchingEngine.h"
 #include "MarketDataStreamer.h"
 #include <thread>
+#include <sstream>
 
 
-static OrderId orderIdCount = 0;
+static OrderId orderIdCount = 1000;
 
 
 MatchingEngine::MatchingEngine()
@@ -23,15 +24,19 @@ void MatchingEngine::Stop()
 	m_processingThread->join();
 }
 
-void MatchingEngine::InsertOrder(const ClientId& clientId, const Order& order)
+void MatchingEngine::InsertOrder(const ClientId& clientId, const Order& i_order)
 {
 	// assuming the client has enough balance to place the order
+	std::ostringstream ss;
+	auto order = i_order;
+	order.id = orderIdCount++;
+	ss << order;
+	auto ack = Ack{ true, "Inserted " + ss.str() };
 	const auto& client = m_clientMap[clientId];
-	auto ack = Ack{ true, "Order inserted" };
 	client->Notify(ack);
 
 	// return success Ack
-	AddTransactionToProcessingQueue(Transaction{ 0, order, TransactionType::Insert });
+	AddTransactionToProcessingQueue(Transaction{ order.id, order, TransactionType::Insert });
 }
 
 void MatchingEngine::AmendOrder(const ClientId& clientId, const OrderId& orderId, const Order& order)

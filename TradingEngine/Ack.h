@@ -9,12 +9,8 @@ struct Ack
 
 	friend std::ostream& operator<<(std::ostream& os, const Ack& ack)
 	{
-		if (!ack.success)
-			os << "Error: ";
-		else
-			os << "Success: ";
-
-		os << ack.message;
+		std::string res = ack.success ? "Success: " : "Error: ";
+		os << res << ack.message;
 		return os;
 	}
 };

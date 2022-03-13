@@ -1,5 +1,6 @@
 #pragma once
 #include "Common.h"
+#include <iostream>
 
 
 struct Order
@@ -22,6 +23,14 @@ struct Order
 	bool operator!=(Order& other) const
 	{
 		return !(*this == other);
+	}
+
+	friend std::ostream& operator<<(std::ostream& os, const Order& order)
+	{
+		os << "Order ID " << order.id;
+		std::string side = order.isBuy ? "buy" : "sell";
+		os << " side " << side << ", price " << order.price << ", amount " << order.amount;
+		return os;
 	}
 };
 

@@ -3,7 +3,7 @@
 #include "OrderUpdate.h"
 #include "IObserver.h"
 
-static ClientId clientIdCount = 0;
+static ClientId clientIdCount = 100;
 
 class Client : public IObserver
 {
