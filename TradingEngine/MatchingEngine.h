@@ -34,7 +34,7 @@ public:
 
 	void CancelOrder(const ClientId& clientId, const OrderId& orderId);
 
-	inline void ReceiveMarketData(const std::shared_ptr<OrderBook> orderBook) { m_orderBook = orderBook; };
+	inline void ReceiveMarketData(const OrderBook& orderBook) { m_orderBook = orderBook; };
 
 	inline void SubscribeClient(ClientId clientId, std::shared_ptr<IObserver> observer) { m_clientMap.emplace(clientId, observer); }
 
@@ -44,7 +44,7 @@ private:
 	void ProcessingQueue();
 
 private:
-	std::shared_ptr<OrderBook> m_orderBook{}; /*Current order book*/
+	OrderBook m_orderBook{}; /*Current order book*/
 
 	std::shared_ptr<std::deque<Transaction>> m_transactionsQueue = 0;
 	mutable std::mutex m_mu;

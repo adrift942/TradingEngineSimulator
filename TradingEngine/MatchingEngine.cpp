@@ -1,4 +1,5 @@
 #include "MatchingEngine.h"
+#include "MarketDataStreamer.h"
 #include <thread>
 
 
@@ -7,6 +8,9 @@ static OrderId orderIdCount = 0;
 
 MatchingEngine::MatchingEngine()
 {
+	auto streamer = MarketDataStreamer();
+	OrderBook orderBook;
+	streamer.GetData(m_orderBook);
 	m_isProcessing = true;
 	m_transactionsQueue.reset(new std::deque<Transaction>());
 	m_processingThread.reset(new std::thread(&MatchingEngine::ProcessingQueue, this));
@@ -33,7 +37,7 @@ void MatchingEngine::InsertOrder(const ClientId& clientId, const Order& order)
 void MatchingEngine::AmendOrder(const ClientId& clientId, const OrderId& orderId, const Order& order)
 {
 	// validation
-	if (m_orderBook->OrderExists(orderId))
+	if (m_orderBook.OrderExists(orderId))
 		; // return success Ack
 	else
 		; // return fail Ack
@@ -44,7 +48,7 @@ void MatchingEngine::AmendOrder(const ClientId& clientId, const OrderId& orderId
 void MatchingEngine::CancelOrder(const ClientId& clientId, const OrderId& orderId)
 {
 	// validation
-	if (!m_orderBook->OrderExists(orderId))
+	if (!m_orderBook.OrderExists(orderId))
 		; // return success Ack
 	else
 		; // return fail Ack
@@ -78,13 +82,13 @@ void MatchingEngine::ProcessingQueue()
 			switch (transaction.type)
 			{
 			case TransactionType::Insert:
-				m_orderBook->InsertOrder(transaction.order);
+				m_orderBook.InsertOrder(transaction.order);
 				break;
 			case TransactionType::Amend:
-				m_orderBook->AmendOrder(transaction.orderId, transaction.order);
+				m_orderBook.AmendOrder(transaction.orderId, transaction.order);
 				break;
 			case TransactionType::Cancel:
-				m_orderBook->CancelOrder(transaction.orderId);
+				m_orderBook.CancelOrder(transaction.orderId);
 				break;
 			}			
 		}

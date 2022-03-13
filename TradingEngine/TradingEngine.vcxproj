@@ -157,6 +157,7 @@
     <ClInclude Include="OrderBook.h" />
     <ClInclude Include="OrderUpdate.h" />
     <ClInclude Include="Trade.h" />
+    <ClInclude Include="Util.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="README.txt" />

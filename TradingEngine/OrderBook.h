@@ -4,25 +4,35 @@
 #include <map>
 #include <mutex>
 #include "Order.h"
+#include "Util.h"
 
 
 class OrderBook
 {
 public:
-	inline float GetBestBidPrice() const { return m_bids.front().front().price; };
+	float GetBestBidPrice() const
+	{
+		return m_bids.front().front().price;
+	};
 
-	inline float GetBestAskPrice() const { return m_asks.front().front().price; };
+	float GetBestAskPrice() const
+	{
+		return m_asks.front().front().price;
+	};
 
-	inline float GetBestBidAmount() const { return m_bids.front().front().unfilledAmount; };
+	float GetBestBidAmount() const
+	{
+		return m_bids.front().front().unfilledAmount;
+	};
 
-	inline float GetBestAskAmount() const { return m_asks.front().front().unfilledAmount; };
+	float GetBestAskAmount() const
+	{
+		return m_asks.front().front().unfilledAmount;
+	};
 
 	bool OrderExists(const OrderId& orderId) const
 	{
-		std::unique_lock<std::mutex> lock(m_mu);
-		bool exists = m_ordersMap.count(orderId) > 0;
-		lock.unlock();
-		return exists;
+		return m_ordersMap.count(orderId) > 0;
 	}
 
 	void InsertOrder(const Order& i_order)
@@ -37,7 +47,7 @@ public:
 				order.unfilledAmount -= tradeAmount;
 				m_asks.front().front().unfilledAmount -= tradeAmount;
 
-				if (m_asks.front().front().unfilledAmount == 0)
+				if (FloatEqual(m_asks.front().front().unfilledAmount, 0))
 				{
 					m_asks.front().pop_front();
 					if (m_asks.front().empty())
@@ -67,7 +77,7 @@ public:
 					{
 						m_bids.front().push_back(order);
 					}
-					else if (prevIt->front().price == order.price)
+					else if (FloatEqual(prevIt->front().price, order.price))
 					{
 						prevIt->push_back(order);
 					}
@@ -78,9 +88,7 @@ public:
 					}
 				}
 
-				std::unique_lock<std::mutex> lock(m_mu);
 				m_ordersMap[order.id] = order;
-				lock.unlock();
 			}
 		}
 		else
@@ -91,7 +99,7 @@ public:
 				order.unfilledAmount -= tradeAmount;
 				m_bids.front().front().unfilledAmount -= tradeAmount;
 
-				if (m_bids.front().front().unfilledAmount == 0)
+				if (FloatEqual(m_bids.front().front().unfilledAmount, 0))
 				{
 					m_bids.front().pop_front();
 					if (m_bids.front().empty())
@@ -121,7 +129,7 @@ public:
 					{
 						m_asks.front().push_back(order);
 					}
-					else if (prevIt->front().price == order.price)
+					else if (FloatEqual(prevIt->front().price, order.price))
 					{
 						prevIt->push_back(order);
 					}
@@ -132,9 +140,7 @@ public:
 					}
 				}
 
-				std::unique_lock<std::mutex> lock(m_mu);
 				m_ordersMap[order.id] = order;
-				lock.unlock();
 			}
 		}
 	}
@@ -156,10 +162,8 @@ public:
 		if (!OrderExists(orderId))
 			return false;
 
-		std::unique_lock<std::mutex> lock(m_mu);
 		const auto order = m_ordersMap[orderId];
 		m_ordersMap.erase(orderId);
-		lock.unlock();
 
 		if (order.isBuy)
 		{
@@ -179,7 +183,7 @@ public:
 						return false;
 				}
 				auto res = CancelOrderFromQueue(order.id, *it);
-				if (it->size() == 0)
+				if (it->empty())
 					if (it == prevIt)
 						m_bids.pop_front();
 					else
@@ -205,7 +209,7 @@ public:
 						return false;
 				}
 				auto res = CancelOrderFromQueue(order.id, *it);
-				if (it->size() == 0)
+				if (it->empty())
 					if (it == prevIt)
 						m_asks.pop_front();
 					else
@@ -273,5 +277,4 @@ public:
 
 private:
 	std::map<OrderId, Order> m_ordersMap; // auxiliary map for faster lookup of orders in the orderbook	
-	mutable std::mutex m_mu; // to synchronize access to m_ordersMap
 };
