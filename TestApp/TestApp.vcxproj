@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{35e2dcb2-dc98-497f-878a-dd3d0fdfdf1b}</ProjectGuid>
-    <RootNamespace>TradingEngine</RootNamespace>
+    <ProjectGuid>{e451262e-705a-4483-9bd4-177dc2ea5b40}</ProjectGuid>
+    <RootNamespace>TestApp</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -40,13 +40,13 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -116,8 +116,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)TradingEngine\include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -132,8 +131,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)TradingEngine\include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -143,27 +141,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="README.txt" />
-    <Text Include="TODO.txt" />
+    <ClCompile Include="TestApp.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\Ack.h" />
-    <ClInclude Include="include\Client.h" />
-    <ClInclude Include="include\Common.h" />
-    <ClInclude Include="include\IObserver.h" />
-    <ClInclude Include="include\MarketDataStreamer.h" />
-    <ClInclude Include="include\MatchingEngine.h" />
-    <ClInclude Include="include\Order.h" />
-    <ClInclude Include="include\OrderBook.h" />
-    <ClInclude Include="include\OrderUpdate.h" />
-    <ClInclude Include="include\Trade.h" />
-    <ClInclude Include="include\Util.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="include\OrderBook.cpp" />
-    <ClCompile Include="src\Client.cpp" />
-    <ClCompile Include="src\MarketDataStreamer.cpp" />
-    <ClCompile Include="src\MatchingEngine.cpp" />
+    <ProjectReference Include="..\TradingEngine\TradingEngine.vcxproj">
+      <Project>{35e2dcb2-dc98-497f-878a-dd3d0fdfdf1b}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

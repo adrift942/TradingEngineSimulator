@@ -17,8 +17,7 @@ struct Order
 
 	bool operator==(Order& other) const
 	{
-		return id == other.id && isBuy == other.isBuy && price == other.price &&
-			amount == other.amount && unfilledAmount == other.unfilledAmount;
+		return isBuy == other.isBuy && price == other.price && amount == other.amount && unfilledAmount == other.unfilledAmount;
 	}
 
 	bool operator!=(Order& other) const
