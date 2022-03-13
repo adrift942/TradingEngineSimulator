@@ -1,5 +1,6 @@
 #include "MatchingEngine.h"
 #include "MarketDataStreamer.h"
+#include "OrderUpdate.h"
 #include <thread>
 #include <sstream>
 
@@ -12,6 +13,8 @@ MatchingEngine::MatchingEngine()
 	auto streamer = MarketDataStreamer();
 	OrderBook orderBook;
 	streamer.GetData(m_orderBook);
+	auto callback = std::bind(&MatchingEngine::NotifyOrderUpdate, this, std::placeholders::_1);
+	m_orderBook.SetOrderUpdateCallback(callback);
 	m_isProcessing = true;
 	m_transactionsQueue.reset(new std::deque<Transaction>());
 	m_processingThread.reset(new std::thread(&MatchingEngine::ProcessingQueue, this));
@@ -27,15 +30,13 @@ void MatchingEngine::Stop()
 void MatchingEngine::InsertOrder(const ClientId& clientId, const Order& i_order)
 {
 	// assuming the client has enough balance to place the order
-	std::ostringstream ss;
 	auto order = i_order;
 	order.id = orderIdCount++;
+	order.clientId = clientId;
+	std::ostringstream ss;
 	ss << order;
-	auto ack = Ack{ true, "Inserted " + ss.str() };
-	const auto& client = m_clientMap[clientId];
-	client->Notify(ack);
+	NotifyAck(clientId, Ack{ true, "Insert " + ss.str() });
 
-	// return success Ack
 	AddTransactionToProcessingQueue(Transaction{ order.id, order, TransactionType::Insert });
 }
 
@@ -43,22 +44,26 @@ void MatchingEngine::AmendOrder(const ClientId& clientId, const OrderId& orderId
 {
 	// validation
 	if (m_orderBook.OrderExists(orderId))
-		; // return success Ack
+	{
+		std::ostringstream ss;
+		ss << order;
+		NotifyAck(clientId, Ack{ true, "Amend " + ss.str() });
+		AddTransactionToProcessingQueue({ orderId, order, TransactionType::Amend });
+	}
 	else
-		; // return fail Ack
-
-	AddTransactionToProcessingQueue({ orderId, order, TransactionType::Amend });
+		NotifyAck(clientId, Ack{ false, "Order ID " + std::to_string(orderId) + " not found."});
 }
 
 void MatchingEngine::CancelOrder(const ClientId& clientId, const OrderId& orderId)
 {
 	// validation
 	if (!m_orderBook.OrderExists(orderId))
-		; // return success Ack
+	{
+		NotifyAck(clientId, Ack{ true, "Cancel order with ID " + std::to_string(orderId) });
+		AddTransactionToProcessingQueue({ orderId, Order(), TransactionType::Cancel });
+	}
 	else
-		; // return fail Ack
-
-	AddTransactionToProcessingQueue({ orderId, Order(), TransactionType::Cancel });
+		NotifyAck(clientId, Ack{ false, "Order ID " + std::to_string(orderId) + " not found." });
 }
 
 // PRIVATE METHODS
@@ -98,5 +103,18 @@ void MatchingEngine::ProcessingQueue()
 			}			
 		}
 	}
+}
+
+void MatchingEngine::NotifyAck(const ClientId& clientId, const Ack& ack)
+{
+	m_clientMap[clientId]->Notify(ack);
+}
+
+void MatchingEngine::NotifyOrderUpdate(OrderUpdate* orderUpdate)
+{
+	if (m_clientMap.count(orderUpdate->clientId) == 0)
+		return;
+	const auto& client = m_clientMap[orderUpdate->clientId];
+	client->Notify(*orderUpdate);	
 }
 

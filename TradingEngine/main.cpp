@@ -14,4 +14,5 @@ int main()
     client.InsertOrder(Order(true, 10.02f, 5000.f));
 
     std::this_thread::sleep_for(2000ms);
+    std::cout << "\nDone" << std::endl;
 }

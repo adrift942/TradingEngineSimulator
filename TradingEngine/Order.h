@@ -9,6 +9,7 @@ struct Order
 	Order(bool isBuy, float price, float amount) : isBuy{ isBuy }, price{ price }, amount{ amount }, unfilledAmount{ amount } {};
 
 	OrderId id;
+	ClientId clientId;
 	bool isBuy;
 	float price;
 	float amount;

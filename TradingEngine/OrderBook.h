@@ -1,10 +1,12 @@
 #pragma once
+#include "Order.h"
+#include "Util.h"
+#include "OrderUpdate.h"
 #include <deque>
 #include <forward_list>
 #include <map>
 #include <mutex>
-#include "Order.h"
-#include "Util.h"
+#include <functional>
 
 
 class OrderBook
@@ -59,7 +61,7 @@ public:
 		ExecuteOrder(order);
 
 		// Insert order in the order book is it was not marketable or if some unfilled amount is left
-		if (FloatGreaterThan(order.unfilledAmount, 0))
+		if (order.unfilledAmount > 0)
 			InsertPendingOrder(order);		
 	}
 
@@ -139,6 +141,11 @@ public:
 		return true;
 	}
 
+	void SetOrderUpdateCallback(std::function<void(OrderUpdate*)> callback)
+	{
+		m_callback = callback;
+	}
+
 	bool operator==(const OrderBook& other) const
 	{
 		auto it1 = m_asks.begin();
@@ -177,41 +184,61 @@ public:
 private:
 	void ExecuteOrder(Order& order)
 	{
+		bool executed = false;
+
 		if (order.isBuy)
 		{
 			while (order.unfilledAmount > 0 && order.price >= GetBestAskPrice())
 			{
-				float tradeAmount = std::min(order.unfilledAmount, m_asks.front().front().unfilledAmount);
+				executed = true;
+				Order bestAskOrder = m_asks.front().front();
+				float tradeAmount = std::min(order.unfilledAmount, bestAskOrder.unfilledAmount);
 				order.unfilledAmount -= tradeAmount;
-				m_asks.front().front().unfilledAmount -= tradeAmount;
+				bestAskOrder.unfilledAmount -= tradeAmount;
 
-				if (FloatEqual(m_asks.front().front().unfilledAmount, 0))
+				// notify maker order
+				OrderUpdateType type = bestAskOrder.unfilledAmount > 0 ? OrderUpdateType::PartiallyFilled : OrderUpdateType::Filled;
+				OrderUpdate orderUpdate{ bestAskOrder.clientId, type, bestAskOrder };
+				NotifyOrderUpdate(orderUpdate);
+
+				if (FloatEqual(bestAskOrder.unfilledAmount, 0))
 				{
 					m_asks.front().pop_front();
 					if (m_asks.front().empty())
-					{
 						m_asks.pop_front();
-					}
 				}
-			}
+			}			
 		}
 		else
 		{
 			while (order.unfilledAmount > 0 && order.price <= GetBestBidPrice())
 			{
-				float tradeAmount = std::min(order.unfilledAmount, m_bids.front().front().unfilledAmount);
+				executed = true;
+				Order bestBidOrder = m_bids.front().front();
+				float tradeAmount = std::min(order.unfilledAmount, bestBidOrder.unfilledAmount);
 				order.unfilledAmount -= tradeAmount;
-				m_bids.front().front().unfilledAmount -= tradeAmount;
+				bestBidOrder.unfilledAmount -= tradeAmount;
 
-				if (FloatEqual(m_bids.front().front().unfilledAmount, 0))
+				// notify maker order
+				OrderUpdateType type = bestBidOrder.unfilledAmount > 0 ? OrderUpdateType::PartiallyFilled : OrderUpdateType::Filled;
+				OrderUpdate orderUpdate{ bestBidOrder.clientId, type, bestBidOrder };
+				NotifyOrderUpdate(orderUpdate);
+
+				if (FloatEqual(bestBidOrder.unfilledAmount, 0))
 				{
 					m_bids.front().pop_front();
 					if (m_bids.front().empty())
-					{
 						m_bids.pop_front();
-					}
 				}
 			}
+		}
+
+		if (executed)
+		{
+			// notify taker order
+			OrderUpdateType type = order.unfilledAmount > 0 ? OrderUpdateType::PartiallyFilled : OrderUpdateType::Filled;
+			OrderUpdate orderUpdate{ order.clientId, type, order };
+			NotifyOrderUpdate(orderUpdate);
 		}
 	}
 
@@ -297,10 +324,19 @@ private:
 		return false;
 	}
 
+	void NotifyOrderUpdate(const OrderUpdate& orderUpdate)
+	{
+		OrderUpdate o = orderUpdate;
+#ifndef TESTING
+		m_callback(&o);
+#endif // !TESTING
+	}
+
 public:
 	std::forward_list<std::deque<Order>> m_bids;
 	std::forward_list<std::deque<Order>> m_asks;
 
 private:
 	std::map<OrderId, Order> m_ordersMap; // auxiliary map for faster lookup of orders in the orderbook	
+	std::function<void(OrderUpdate*)> m_callback;
 };

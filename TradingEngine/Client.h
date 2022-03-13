@@ -15,9 +15,9 @@ public:
 
 	void InsertOrder(const Order& order) const;
 
-	void Notify(Ack& ack) override;
+	void Notify(const Ack& ack) override;
 
-	void Notify(OrderUpdate& orderUpdate) override;
+	void Notify(const OrderUpdate& orderUpdate) override;
 
 public:
 	ClientId id;

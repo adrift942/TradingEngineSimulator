@@ -43,6 +43,10 @@ private:
 
 	void ProcessingQueue();
 
+	void NotifyAck(const ClientId& clientId, const Ack& ack);
+
+	void NotifyOrderUpdate(OrderUpdate* orderUpdate);	
+
 private:
 	OrderBook m_orderBook{};
 
