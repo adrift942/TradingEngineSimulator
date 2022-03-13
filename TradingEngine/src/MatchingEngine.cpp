@@ -72,7 +72,7 @@ void MatchingEngine::CancelOrder(const ClientId& clientId, const OrderId& orderI
 		NotifyAck(clientId, Ack{ false, "Order ID " + std::to_string(orderId) + " not found." });
 }
 
-void MatchingEngine::ReceiveStreamMarketData(const std::vector<Order>& orders)
+void MatchingEngine::ReceiveMarketDataStream(const std::vector<Order>& orders)
 {
 	//std::cout << "Received market data stream" << std::endl;
 	for (auto i = 0; i < orders.size(); i++)
@@ -139,7 +139,7 @@ void MatchingEngine::StreamMarketData()
 	while (m_isProcessing)
 	{
 		streamer.GetData(orders);
-		ReceiveStreamMarketData(orders);		
+		ReceiveMarketDataStream(orders);		
 	}
 }
 
@@ -150,14 +150,14 @@ void MatchingEngine::NotifyAck(const ClientId& clientId, const Ack& ack)
 	m_clientMap[clientId]->Notify(ack);
 }
 
-void MatchingEngine::NotifyOrderUpdate(OrderUpdate* orderUpdate)
+void MatchingEngine::NotifyOrderUpdate(std::shared_ptr<OrderUpdate> orderUpdate)
 {
 	if (m_clientMap.count(orderUpdate->clientId) == 0)
 		return;
 	m_clientMap[orderUpdate->clientId]->Notify(*orderUpdate);
 }
 
-void MatchingEngine::NotifyTrade(Trade* trade)
+void MatchingEngine::NotifyTrade(std::shared_ptr<Trade> trade)
 {
 	if (m_clientMap.count(trade->clientId) == 0)
 		return;

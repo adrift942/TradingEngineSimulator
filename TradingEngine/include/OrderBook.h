@@ -29,11 +29,11 @@ public:
 
 	bool CancelOrder(const OrderId& orderId);
 
-	void SetCallback(std::function<void(OrderUpdate*)> callback);
+	void SetCallback(std::function<void(std::shared_ptr<OrderUpdate>)> callback);
 
-	void SetCallback(std::function<void(Trade*)> callback);
+	void SetCallback(std::function<void(std::shared_ptr<Trade>)> callback);
 
-	inline void SetIsTest(bool isTest) { m_isTest = isTest; };
+	inline void SetIsTest(const bool isTest) { m_isTest = isTest; };
 
 	bool operator==(const OrderBook& other) const;
 
@@ -56,7 +56,7 @@ public:
 
 private:
 	std::map<OrderId, Order> m_ordersMap; // auxiliary map for faster lookup of orders in the orderbook	
-	std::function<void(OrderUpdate*)> m_orderUpdateCallback;
-	std::function<void(Trade*)> m_tradeCallback;
+	std::function<void(std::shared_ptr<OrderUpdate>)> m_orderUpdateCallback;
+	std::function<void(std::shared_ptr<Trade>)> m_tradeCallback;
 	bool m_isTest = false; // avoid calling callbacks during unit tests
 };

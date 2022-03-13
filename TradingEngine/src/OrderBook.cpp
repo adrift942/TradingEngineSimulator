@@ -137,12 +137,12 @@ bool OrderBook::CancelOrder(const OrderId& orderId)
 	return true;
 }
 
-void OrderBook::SetCallback(std::function<void(OrderUpdate*)> callback)
+void OrderBook::SetCallback(std::function<void(std::shared_ptr<OrderUpdate>)> callback)
 {
 	m_orderUpdateCallback = callback;
 }
 
-void OrderBook::SetCallback(std::function<void(Trade*)> callback)
+void OrderBook::SetCallback(std::function<void(std::shared_ptr<Trade>)> callback)
 {
 	m_tradeCallback = callback;
 }
@@ -331,14 +331,14 @@ void OrderBook::Notify(const OrderUpdate& orderUpdate)
 {
 	if (m_isTest)
 		return;
-	OrderUpdate o = orderUpdate;
-	m_orderUpdateCallback(&o);
+	auto o = std::make_shared<OrderUpdate>(orderUpdate);
+	m_orderUpdateCallback(o);
 }
 
 void OrderBook::Notify(const Trade& trade)
 {
 	if (m_isTest)
 		return;
-	Trade t = trade;
-	m_tradeCallback(&t);
+	auto t = std::make_shared<Trade>(trade);
+	m_tradeCallback(t);
 }

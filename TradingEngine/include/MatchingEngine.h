@@ -36,11 +36,11 @@ public:
 
 	void CancelOrder(const ClientId& clientId, const OrderId& orderId);
 
-	void ReceiveStreamMarketData(const std::vector<Order>& orders);
+	void ReceiveMarketDataStream(const std::vector<Order>& orders);
 
-	inline void SubscribeClient(ClientId clientId, std::shared_ptr<IObserver> observer) { m_clientMap.emplace(clientId, observer); }
+	inline void SubscribeClient(const ClientId& clientId, const std::shared_ptr<IObserver> observer) { m_clientMap.emplace(clientId, observer); }
 
-	inline void SetIsTest(bool isTest) { m_orderBook.SetIsTest(isTest); };
+	inline void SetIsTest(const bool isTest) { m_orderBook.SetIsTest(isTest); };
 
 private:
 	void AddTransactionToProcessingQueue(const Transaction& transaction);
@@ -51,9 +51,9 @@ private:
 
 	void NotifyAck(const ClientId& clientId, const Ack& ack);
 
-	void NotifyOrderUpdate(OrderUpdate* orderUpdate);
+	void NotifyOrderUpdate(std::shared_ptr<OrderUpdate> orderUpdate);
 
-	void NotifyTrade(Trade* trade);
+	void NotifyTrade(std::shared_ptr<Trade> trade);
 
 private:
 	OrderBook m_orderBook{};
