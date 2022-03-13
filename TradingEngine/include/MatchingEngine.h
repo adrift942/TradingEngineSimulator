@@ -36,7 +36,7 @@ public:
 
 	void CancelOrder(const ClientId& clientId, const OrderId& orderId);
 
-	void ReceiveStreamMarketData(const std::vector<Order> &orders);
+	void ReceiveStreamMarketData(const std::vector<Order>& orders);
 
 	inline void SubscribeClient(ClientId clientId, std::shared_ptr<IObserver> observer) { m_clientMap.emplace(clientId, observer); }
 
@@ -51,9 +51,9 @@ private:
 
 	void NotifyAck(const ClientId& clientId, const Ack& ack);
 
-	void NotifyOrderUpdate(OrderUpdate* orderUpdate);	
+	void NotifyOrderUpdate(OrderUpdate* orderUpdate);
 
-	void NotifyTrade(Trade* trade);	
+	void NotifyTrade(Trade* trade);
 
 private:
 	OrderBook m_orderBook{};
@@ -67,4 +67,6 @@ private:
 	std::shared_ptr<std::thread> m_streamDataThread = 0;
 
 	std::map<ClientId, std::shared_ptr<IObserver>> m_clientMap{};
+
+	uint64_t m_txPerSecondCounter = 0;
 };

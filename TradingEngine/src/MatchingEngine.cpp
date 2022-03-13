@@ -74,7 +74,7 @@ void MatchingEngine::CancelOrder(const ClientId& clientId, const OrderId& orderI
 
 void MatchingEngine::ReceiveStreamMarketData(const std::vector<Order>& orders)
 {
-	std::cout << "Received market data stream" << std::endl;
+	//std::cout << "Received market data stream" << std::endl;
 	for (auto i = 0; i < orders.size(); i++)
 	{
 		Transaction tx = { 0, orders[i], TransactionType::Insert };
@@ -94,6 +94,7 @@ void MatchingEngine::AddTransactionToProcessingQueue(const Transaction& transact
 
 void MatchingEngine::ProcessTransactionsQueue()
 {
+	auto start = std::chrono::high_resolution_clock::now();
 	while (m_isProcessing)
 	{
 		std::unique_lock<std::mutex> lock(m_mu);
@@ -104,6 +105,7 @@ void MatchingEngine::ProcessTransactionsQueue()
 		{
 			const auto& transaction = m_transactionsQueue->front();
 			m_transactionsQueue->pop_front();
+			m_txPerSecondCounter++;
 
 			switch (transaction.type)
 			{
@@ -116,7 +118,15 @@ void MatchingEngine::ProcessTransactionsQueue()
 			case TransactionType::Cancel:
 				m_orderBook.CancelOrder(transaction.orderId);
 				break;
-			}			
+			}
+			auto now = std::chrono::high_resolution_clock::now();
+			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - start);
+			if (duration.count() >= 1000)
+			{
+				std::cout << "Processed " << m_txPerSecondCounter << " transactions" << std::endl;
+				m_txPerSecondCounter = 0;
+				start = std::chrono::high_resolution_clock::now();
+			}
 		}
 	}
 }

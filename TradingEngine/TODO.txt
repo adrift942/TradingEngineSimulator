@@ -1,1 +1,1 @@
-improve order update and trade notificatio messages
+improve order update and trade notification messages

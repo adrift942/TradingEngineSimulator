@@ -160,10 +160,10 @@
     <ClInclude Include="include\Util.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="include\OrderBook.cpp" />
     <ClCompile Include="src\Client.cpp" />
     <ClCompile Include="src\MarketDataStreamer.cpp" />
     <ClCompile Include="src\MatchingEngine.cpp" />
+    <ClCompile Include="src\OrderBook.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
