@@ -11,10 +11,14 @@ static OrderId orderIdCount = 1000;
 MatchingEngine::MatchingEngine()
 {
 	auto streamer = MarketDataStreamer();
-	OrderBook orderBook;
-	streamer.GetData(m_orderBook);
+	std::vector<Order> orders;
+	streamer.GetData(orders);
+
 	auto callback = std::bind(&MatchingEngine::NotifyOrderUpdate, this, std::placeholders::_1);
 	m_orderBook.SetOrderUpdateCallback(callback);
+
+	ReceiveStreamMarketData(orders);
+
 	m_isProcessing = true;
 	m_transactionsQueue.reset(new std::deque<Transaction>());
 	m_processingThread.reset(new std::thread(&MatchingEngine::ProcessingQueue, this));
@@ -66,6 +70,14 @@ void MatchingEngine::CancelOrder(const ClientId& clientId, const OrderId& orderI
 		NotifyAck(clientId, Ack{ false, "Order ID " + std::to_string(orderId) + " not found." });
 }
 
+void MatchingEngine::ReceiveStreamMarketData(const std::vector<Order>& orders)
+{
+	for (auto i = 0; i < orders.size(); i++)
+	{
+		m_orderBook.InsertOrder(orders[i]);
+	}
+}
+
 // PRIVATE METHODS
 void MatchingEngine::AddTransactionToProcessingQueue(const Transaction& transaction)
 {
@@ -107,6 +119,8 @@ void MatchingEngine::ProcessingQueue()
 
 void MatchingEngine::NotifyAck(const ClientId& clientId, const Ack& ack)
 {
+	if (m_clientMap.count(clientId) == 0)
+		return;
 	m_clientMap[clientId]->Notify(ack);
 }
 
@@ -114,7 +128,6 @@ void MatchingEngine::NotifyOrderUpdate(OrderUpdate* orderUpdate)
 {
 	if (m_clientMap.count(orderUpdate->clientId) == 0)
 		return;
-	const auto& client = m_clientMap[orderUpdate->clientId];
-	client->Notify(*orderUpdate);	
+	m_clientMap[orderUpdate->clientId]->Notify(*orderUpdate);
 }
 

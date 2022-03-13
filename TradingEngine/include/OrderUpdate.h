@@ -1,7 +1,7 @@
 #pragma once
 #include "Common.h"
 
-enum class OrderUpdateType { Filled, PartiallyFilled, Amended, Canceled };
+enum class OrderUpdateType { Open, Filled, PartiallyFilled, Amended, Canceled };
 
 struct OrderUpdate
 {

@@ -1,11 +1,12 @@
 #include "OrderBook.h"
+#include <float.h>
 
 
 // PUBLIC METHODS
 float OrderBook::GetBestBidPrice() const
 {
 	if (m_bids.empty())
-		throw std::exception("Order book has no bids");
+		return 0;
 	else if (m_bids.front().empty())
 		throw std::exception("Best bid is empty and has not been removed");
 	return m_bids.front().front().price;
@@ -14,7 +15,7 @@ float OrderBook::GetBestBidPrice() const
 float OrderBook::GetBestAskPrice() const
 {
 	if (m_asks.empty())
-		throw std::exception("Order book has no asks");
+		return FLT_MAX;
 	else if (m_asks.front().empty())
 		throw std::exception("Best ask is empty and has not been removed");
 	return m_asks.front().front().price;
@@ -23,7 +24,7 @@ float OrderBook::GetBestAskPrice() const
 float OrderBook::GetBestBidAmount() const
 {
 	if (m_bids.empty())
-		throw std::exception("Order book has no bids");
+		throw std::exception("Order book has no bids");		
 	else if (m_bids.front().empty())
 		throw std::exception("Best bid is empty and has not been removed");
 	return m_bids.front().front().unfilledAmount;
@@ -64,6 +65,9 @@ bool OrderBook::AmendOrder(const OrderId& orderId, const Order& i_order)
 	auto order = i_order;
 	order.id = orderId;
 	InsertOrder(order);
+
+	OrderUpdate orderUpdate{ order.clientId, OrderUpdateType::Amended, order };
+	NotifyOrderUpdate(orderUpdate);
 	return true;
 }
 
@@ -128,6 +132,8 @@ bool OrderBook::CancelOrder(const OrderId& orderId)
 		}
 	}
 
+	OrderUpdate orderUpdate{ order.clientId, OrderUpdateType::Canceled, order};
+	NotifyOrderUpdate(orderUpdate);
 	return true;
 }
 
@@ -178,7 +184,7 @@ void OrderBook::ExecuteOrder(Order& order)
 
 	if (order.isBuy)
 	{
-		while (order.unfilledAmount > 0 && order.price >= GetBestAskPrice())
+		while (!m_asks.empty() && order.unfilledAmount > 0 && order.price >= GetBestAskPrice())
 		{
 			executed = true;
 			Order& bestAskOrder = m_asks.front().front();
@@ -201,7 +207,7 @@ void OrderBook::ExecuteOrder(Order& order)
 	}
 	else
 	{
-		while (order.unfilledAmount > 0 && order.price <= GetBestBidPrice())
+		while (!m_bids.empty() && order.unfilledAmount > 0 && order.price <= GetBestBidPrice())
 		{
 			executed = true;
 			Order& bestBidOrder = m_bids.front().front();
@@ -263,7 +269,7 @@ void OrderBook::InsertPendingOrder(Order& order)
 				auto tmp = std::deque<Order>{ order };
 				m_bids.insert_after(prevIt, tmp);
 			}
-		}
+		}		
 	}
 	else
 	{
@@ -298,6 +304,8 @@ void OrderBook::InsertPendingOrder(Order& order)
 	}
 
 	m_ordersMap[order.id] = order;
+	OrderUpdate orderUpdate{ order.clientId, OrderUpdateType::Open, order };
+	NotifyOrderUpdate(orderUpdate);
 }
 
 bool OrderBook::CancelOrderFromQueue(const OrderId& orderId, std::deque<Order>& queue)

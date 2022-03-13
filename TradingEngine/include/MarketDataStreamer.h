@@ -1,9 +1,11 @@
 #pragma once
-#include "OrderBook.h"
+#include "Order.h"
+#include <vector>
+
 
 class MarketDataStreamer
 {
 public:
-	void GetData(OrderBook& orderBook) const;
+	void GetData(std::vector<Order>& orders) const;
 };
 

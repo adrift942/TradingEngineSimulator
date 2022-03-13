@@ -9,6 +9,7 @@
 #include <deque>
 #include <mutex>
 #include <functional>
+#include <vector>
 
 
 enum class TransactionType { Insert, Amend, Cancel };
@@ -34,9 +35,11 @@ public:
 
 	void CancelOrder(const ClientId& clientId, const OrderId& orderId);
 
-	inline void ReceiveMarketData(const OrderBook& orderBook) { m_orderBook = orderBook; };
+	void ReceiveStreamMarketData(const std::vector<Order> &orders);
 
 	inline void SubscribeClient(ClientId clientId, std::shared_ptr<IObserver> observer) { m_clientMap.emplace(clientId, observer); }
+
+	inline void SetTest(bool isTest) { m_orderBook.SetTest(isTest); };
 
 private:
 	void AddTransactionToProcessingQueue(const Transaction& transaction);

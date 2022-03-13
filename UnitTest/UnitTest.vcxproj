@@ -33,7 +33,9 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
-    <ClCompile Include="test.cpp" />
+    <ClCompile Include="ClientRequestTest.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="OrderBookTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TradingEngine\TradingEngine.vcxproj">

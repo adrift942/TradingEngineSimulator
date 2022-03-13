@@ -23,9 +23,6 @@
     </Text>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\Ack.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\Client.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -54,6 +51,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Ack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
