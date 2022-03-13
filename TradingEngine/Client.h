@@ -11,6 +11,7 @@ public:
 	Client(const std::shared_ptr<MatchingEngine> engine) : m_engine{engine}
 	{
 		id = clientIdCount++;
+		engine->SubscribeClient(id, std::make_shared<Client>(*this));
 	};
 
 	void InsertOrder(const Order& order) const;
