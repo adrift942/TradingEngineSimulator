@@ -1,25 +1,28 @@
 #pragma once
 #include "MatchingEngine.h"
 #include "OrderUpdate.h"
+#include "IObserver.h"
 
-class Client
+static ClientId clientIdCount = 0;
+
+class Client : public IObserver
 {
-//public:
-//	Client() {};
-//	Client(const MatchingEngine& engine) : m_engine{engine} {};
-//
-//	void InsertOrder(const Order& order) const;
-//
-//	void AmendOrder(const OrderId& orderId, const Order& order) const;
-//
-//	void CancelOrder(const OrderId&) const;
-//
-//	void Notify(const Ack& ack) const;
-//
-//	void Notify(const OrderUpdate& orderUpdate) const;
-//
-//private:
-//	ClientId id;
-//	MatchingEngine m_engine;
+public:
+	Client(const std::shared_ptr<MatchingEngine> engine) : m_engine{engine}
+	{
+		id = clientIdCount++;
+	};
+
+	void InsertOrder(const Order& order) const;
+
+	void Notify(Ack& ack) override;
+
+	void Notify(OrderUpdate& orderUpdate) override;
+
+public:
+	ClientId id;
+
+private:	
+	std::shared_ptr<MatchingEngine> m_engine;
 };
 

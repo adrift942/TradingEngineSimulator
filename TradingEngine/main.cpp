@@ -1,12 +1,13 @@
-#include <iostream>
 #include "MatchingEngine.h"
 #include "Client.h"
-#include "Simulator.h"
+#include <iostream>
+#include <memory>
 
 int main()
 {
-    //auto engine = MatchingEngine();
-    //auto client = Client();
-    //auto simulator = Simulator(engine, client);
-    //simulator.Start();
+    auto engine = std::make_shared<MatchingEngine>();
+    auto client = Client(engine);
+    engine->SubscribeClient(client.id, std::make_shared<Client>(client));
+
+    client.InsertOrder(Order(true, 1, 1));
 }

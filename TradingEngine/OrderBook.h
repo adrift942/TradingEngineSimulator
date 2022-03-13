@@ -2,6 +2,7 @@
 #include <deque>
 #include <forward_list>
 #include <map>
+#include <mutex>
 #include "Order.h"
 
 
@@ -16,7 +17,13 @@ public:
 
 	inline float GetBestAskAmount() const { return m_asks.front().front().unfilledAmount; };
 
-	inline bool OrderExists(const OrderId& orderId) const { return m_ordersMap.count(orderId) > 0; }
+	bool OrderExists(const OrderId& orderId) const
+	{
+		std::unique_lock<std::mutex> lock(m_mu);
+		bool exists = m_ordersMap.count(orderId) > 0;
+		lock.unlock();
+		return exists;
+	}
 
 	void InsertOrder(const Order& i_order)
 	{
@@ -71,7 +78,9 @@ public:
 					}
 				}
 
+				std::unique_lock<std::mutex> lock(m_mu);
 				m_ordersMap[order.id] = order;
+				lock.unlock();
 			}
 		}
 		else
@@ -123,7 +132,9 @@ public:
 					}
 				}
 
+				std::unique_lock<std::mutex> lock(m_mu);
 				m_ordersMap[order.id] = order;
+				lock.unlock();
 			}
 		}
 	}
@@ -145,8 +156,10 @@ public:
 		if (!OrderExists(orderId))
 			return false;
 
+		std::unique_lock<std::mutex> lock(m_mu);
 		const auto order = m_ordersMap[orderId];
 		m_ordersMap.erase(orderId);
+		lock.unlock();
 
 		if (order.isBuy)
 		{
@@ -260,4 +273,5 @@ public:
 
 private:
 	std::map<OrderId, Order> m_ordersMap; // auxiliary map for faster lookup of orders in the orderbook	
+	mutable std::mutex m_mu; // to synchronize access to m_ordersMap
 };

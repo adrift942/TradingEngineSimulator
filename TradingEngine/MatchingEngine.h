@@ -1,12 +1,14 @@
 #pragma once
+#include "Order.h"
+#include "Ack.h"
+#include "OrderBook.h"
+#include "IObserver.h"
 #include <cstdint>
 #include <memory>
 #include <map>
 #include <deque>
 #include <mutex>
-#include "Order.h"
-#include "Ack.h"
-#include "OrderBook.h"
+#include <functional>
 
 
 enum class TransactionType { Insert, Amend, Cancel };
@@ -22,33 +24,33 @@ struct Transaction
 class MatchingEngine
 {
 public:
-	MatchingEngine() {};
-
-	void Start();
+	MatchingEngine();
 
 	void Stop();
 
-	void InsertOrder(const Order& order);
+	void InsertOrder(const ClientId& clientId, const Order& order);
 
-	void AmendOrder(const OrderId& orderId, const Order& order);
+	void AmendOrder(const ClientId& clientId, const OrderId& orderId, const Order& order);
 
-	void CancelOrder(const OrderId& orderId);
+	void CancelOrder(const ClientId& clientId, const OrderId& orderId);
 
-	inline void ReceiveMarketData(const OrderBook& orderBook) { m_orderBook = std::make_shared<OrderBook>(orderBook); };
+	inline void ReceiveMarketData(const std::shared_ptr<OrderBook> orderBook) { m_orderBook = orderBook; };
+
+	inline void SubscribeClient(ClientId clientId, std::shared_ptr<IObserver> observer) { m_clientMap.emplace(clientId, observer); }
 
 private:
 	void AddTransactionToProcessingQueue(const Transaction& transaction);
 
-	void ProcessQueue();
+	void ProcessingQueue();
 
 private:
 	std::shared_ptr<OrderBook> m_orderBook{}; /*Current order book*/
 
-	std::shared_ptr<std::deque<Transaction>> m_transactionsQueue{};
+	std::shared_ptr<std::deque<Transaction>> m_transactionsQueue = 0;
 	mutable std::mutex m_mu;
 	std::condition_variable m_cv;
 	std::shared_ptr<std::thread> m_processingThread = 0;
-
 	bool m_isProcessing = false;
-};
 
+	std::map<ClientId, std::shared_ptr<IObserver>> m_clientMap{};
+};

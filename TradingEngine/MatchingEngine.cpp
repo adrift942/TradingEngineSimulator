@@ -5,28 +5,32 @@
 static OrderId orderIdCount = 0;
 
 
-// PUBLIC METHODS
-void MatchingEngine::Start()
+MatchingEngine::MatchingEngine()
 {
 	m_isProcessing = true;
-	m_processingThread.reset(new std::thread(&MatchingEngine::ProcessQueue, this));
+	m_transactionsQueue.reset(new std::deque<Transaction>());
+	m_processingThread.reset(new std::thread(&MatchingEngine::ProcessingQueue, this));
 }
 
+// PUBLIC METHODS
 void MatchingEngine::Stop()
 {
 	m_isProcessing = false;
 	m_processingThread->join();
 }
 
-void MatchingEngine::InsertOrder(const Order& order)
+void MatchingEngine::InsertOrder(const ClientId& clientId, const Order& order)
 {
 	// assuming the client has enough balance to place the order
+	const auto& client = m_clientMap[clientId];
+	auto ack = Ack{ true, "Order inserted" };
+	client->Notify(ack);
 
 	// return success Ack
 	AddTransactionToProcessingQueue(Transaction{ 0, order, TransactionType::Insert });
 }
 
-void MatchingEngine::AmendOrder(const OrderId& orderId, const Order& order)
+void MatchingEngine::AmendOrder(const ClientId& clientId, const OrderId& orderId, const Order& order)
 {
 	// validation
 	if (m_orderBook->OrderExists(orderId))
@@ -37,7 +41,7 @@ void MatchingEngine::AmendOrder(const OrderId& orderId, const Order& order)
 	AddTransactionToProcessingQueue({ orderId, order, TransactionType::Amend });
 }
 
-void MatchingEngine::CancelOrder(const OrderId& orderId)
+void MatchingEngine::CancelOrder(const ClientId& clientId, const OrderId& orderId)
 {
 	// validation
 	if (!m_orderBook->OrderExists(orderId))
@@ -58,7 +62,7 @@ void MatchingEngine::AddTransactionToProcessingQueue(const Transaction& transact
 	m_cv.notify_one();
 }
 
-void MatchingEngine::ProcessQueue()
+void MatchingEngine::ProcessingQueue()
 {
 	while (m_isProcessing)
 	{
