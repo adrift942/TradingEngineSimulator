@@ -5,7 +5,7 @@
 struct OrderBookTest : testing::Test {
 
 	OrderBookTest() {
-		orderBook.SetTest(true);
+		orderBook.SetIsTest(true);
 
 		std::forward_list<std::deque<Order>> bids;
 		bids.push_front(std::deque<Order>{Order(true, 9.96f, 40000.f) });

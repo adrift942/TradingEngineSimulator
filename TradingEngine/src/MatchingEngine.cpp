@@ -3,25 +3,25 @@
 #include "OrderUpdate.h"
 #include <thread>
 #include <sstream>
+#include <chrono>
 
+using namespace std::chrono_literals;
 
 static OrderId orderIdCount = 1000;
 
 
 MatchingEngine::MatchingEngine()
 {
-	auto streamer = MarketDataStreamer();
-	std::vector<Order> orders;
-	streamer.GetData(orders);
-
 	auto callback = std::bind(&MatchingEngine::NotifyOrderUpdate, this, std::placeholders::_1);
 	m_orderBook.SetOrderUpdateCallback(callback);
 
-	ReceiveStreamMarketData(orders);
-
+	// start processing thread
 	m_isProcessing = true;
 	m_transactionsQueue.reset(new std::deque<Transaction>());
-	m_processingThread.reset(new std::thread(&MatchingEngine::ProcessingQueue, this));
+	m_processingThread.reset(new std::thread(&MatchingEngine::ProcessTransactionsQueue, this));
+	
+	// stream market data thread
+	m_streamDataThread.reset(new std::thread(&MatchingEngine::StreamMarketData, this));
 }
 
 // PUBLIC METHODS
@@ -72,9 +72,11 @@ void MatchingEngine::CancelOrder(const ClientId& clientId, const OrderId& orderI
 
 void MatchingEngine::ReceiveStreamMarketData(const std::vector<Order>& orders)
 {
+	std::cout << "Received market data stream" << std::endl;
 	for (auto i = 0; i < orders.size(); i++)
 	{
-		m_orderBook.InsertOrder(orders[i]);
+		Transaction tx = { 0, orders[i], TransactionType::Insert };
+		AddTransactionToProcessingQueue(tx);
 	}
 }
 
@@ -88,7 +90,7 @@ void MatchingEngine::AddTransactionToProcessingQueue(const Transaction& transact
 	m_cv.notify_one();
 }
 
-void MatchingEngine::ProcessingQueue()
+void MatchingEngine::ProcessTransactionsQueue()
 {
 	while (m_isProcessing)
 	{
@@ -114,6 +116,18 @@ void MatchingEngine::ProcessingQueue()
 				break;
 			}			
 		}
+	}
+}
+
+void MatchingEngine::StreamMarketData()
+{
+	auto streamer = MarketDataStreamer();
+	std::vector<Order> orders;
+	
+	while (m_isProcessing)
+	{
+		streamer.GetData(orders);
+		ReceiveStreamMarketData(orders);		
 	}
 }
 

@@ -30,7 +30,7 @@ public:
 
 	void SetOrderUpdateCallback(std::function<void(OrderUpdate*)> callback);
 
-	inline void SetTest(bool isTest) { m_isTest = isTest; };
+	inline void SetIsTest(bool isTest) { m_isTest = isTest; };
 
 	bool operator==(const OrderBook& other) const;
 

@@ -11,7 +11,7 @@ struct ClientRequestTest : testing::Test {
 
 	ClientRequestTest() {
 		engine = std::make_shared<MatchingEngine>();
-		engine->SetTest(true);
+		engine->SetIsTest(true);
 	}
 
 	std::shared_ptr<MatchingEngine> engine;

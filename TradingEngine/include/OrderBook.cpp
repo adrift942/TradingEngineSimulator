@@ -251,7 +251,7 @@ void OrderBook::InsertPendingOrder(Order& order)
 		{
 			auto it = m_bids.begin();
 			auto prevIt = it;
-			while (order.price < it->front().price)
+			while (it != m_bids.end() && order.price < it->front().price)
 			{
 				prevIt = it;
 				it++;
@@ -282,7 +282,7 @@ void OrderBook::InsertPendingOrder(Order& order)
 		{
 			auto it = m_asks.begin();
 			auto prevIt = it;
-			while (order.price > it->front().price)
+			while (it != m_asks.end() && order.price > it->front().price)
 			{
 				prevIt = it;
 				it++;

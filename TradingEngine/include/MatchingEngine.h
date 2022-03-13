@@ -39,12 +39,14 @@ public:
 
 	inline void SubscribeClient(ClientId clientId, std::shared_ptr<IObserver> observer) { m_clientMap.emplace(clientId, observer); }
 
-	inline void SetTest(bool isTest) { m_orderBook.SetTest(isTest); };
+	inline void SetIsTest(bool isTest) { m_orderBook.SetIsTest(isTest); };
 
 private:
 	void AddTransactionToProcessingQueue(const Transaction& transaction);
 
-	void ProcessingQueue();
+	void ProcessTransactionsQueue();
+
+	void StreamMarketData();
 
 	void NotifyAck(const ClientId& clientId, const Ack& ack);
 
@@ -56,8 +58,10 @@ private:
 	std::shared_ptr<std::deque<Transaction>> m_transactionsQueue = 0;
 	mutable std::mutex m_mu;
 	std::condition_variable m_cv;
-	std::shared_ptr<std::thread> m_processingThread = 0;
 	bool m_isProcessing = false;
+
+	std::shared_ptr<std::thread> m_processingThread = 0;
+	std::shared_ptr<std::thread> m_streamDataThread = 0;
 
 	std::map<ClientId, std::shared_ptr<IObserver>> m_clientMap{};
 };

@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\data_types">
+      <UniqueIdentifier>{ac65fc72-5b9f-4253-8b8d-554f330c2062}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="TODO.txt">
@@ -26,35 +29,32 @@
     <ClInclude Include="include\Client.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Common.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\IObserver.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\MarketDataStreamer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\MatchingEngine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Order.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\OrderBook.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\OrderUpdate.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Trade.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Ack.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\data_types</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Common.h">
+      <Filter>Header Files\data_types</Filter>
+    </ClInclude>
+    <ClInclude Include="include\IObserver.h">
+      <Filter>Header Files\data_types</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Order.h">
+      <Filter>Header Files\data_types</Filter>
+    </ClInclude>
+    <ClInclude Include="include\OrderUpdate.h">
+      <Filter>Header Files\data_types</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
