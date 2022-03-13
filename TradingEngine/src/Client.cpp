@@ -16,3 +16,8 @@ void Client::Notify(const OrderUpdate& orderUpdate)
 {
 	std::cout << "Client ID " << id << " received order update: " << orderUpdate << std::endl;
 }
+
+void Client::Notify(const Trade& trade)
+{
+	std::cout << "Client ID " << id << " executed trade: " << trade << std::endl;
+}

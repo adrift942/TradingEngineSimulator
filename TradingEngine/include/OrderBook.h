@@ -2,6 +2,7 @@
 #include "Order.h"
 #include "Util.h"
 #include "OrderUpdate.h"
+#include "Trade.h"
 #include <deque>
 #include <forward_list>
 #include <map>
@@ -28,7 +29,9 @@ public:
 
 	bool CancelOrder(const OrderId& orderId);
 
-	void SetOrderUpdateCallback(std::function<void(OrderUpdate*)> callback);
+	void SetCallback(std::function<void(OrderUpdate*)> callback);
+
+	void SetCallback(std::function<void(Trade*)> callback);
 
 	inline void SetIsTest(bool isTest) { m_isTest = isTest; };
 
@@ -43,7 +46,9 @@ private:
 
 	bool CancelOrderFromQueue(const OrderId& orderId, std::deque<Order>& queue);
 
-	void NotifyOrderUpdate(const OrderUpdate& orderUpdate);
+	void Notify(const OrderUpdate& orderUpdate);
+
+	void Notify(const Trade& trade);
 
 public:
 	std::forward_list<std::deque<Order>> m_bids;
@@ -51,6 +56,7 @@ public:
 
 private:
 	std::map<OrderId, Order> m_ordersMap; // auxiliary map for faster lookup of orders in the orderbook	
-	std::function<void(OrderUpdate*)> m_callback;
+	std::function<void(OrderUpdate*)> m_orderUpdateCallback;
+	std::function<void(Trade*)> m_tradeCallback;
 	bool m_isTest = false; // avoid calling callbacks during unit tests
 };

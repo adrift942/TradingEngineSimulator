@@ -3,6 +3,7 @@
 #include "Ack.h"
 #include "OrderBook.h"
 #include "IObserver.h"
+#include "Trade.h"
 #include <cstdint>
 #include <memory>
 #include <map>
@@ -51,6 +52,8 @@ private:
 	void NotifyAck(const ClientId& clientId, const Ack& ack);
 
 	void NotifyOrderUpdate(OrderUpdate* orderUpdate);	
+
+	void NotifyTrade(Trade* trade);	
 
 private:
 	OrderBook m_orderBook{};

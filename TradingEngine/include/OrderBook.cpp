@@ -67,7 +67,7 @@ bool OrderBook::AmendOrder(const OrderId& orderId, const Order& i_order)
 	InsertOrder(order);
 
 	OrderUpdate orderUpdate{ order.clientId, OrderUpdateType::Amended, order };
-	NotifyOrderUpdate(orderUpdate);
+	Notify(orderUpdate);
 	return true;
 }
 
@@ -133,13 +133,18 @@ bool OrderBook::CancelOrder(const OrderId& orderId)
 	}
 
 	OrderUpdate orderUpdate{ order.clientId, OrderUpdateType::Canceled, order};
-	NotifyOrderUpdate(orderUpdate);
+	Notify(orderUpdate);
 	return true;
 }
 
-void OrderBook::SetOrderUpdateCallback(std::function<void(OrderUpdate*)> callback)
+void OrderBook::SetCallback(std::function<void(OrderUpdate*)> callback)
 {
-	m_callback = callback;
+	m_orderUpdateCallback = callback;
+}
+
+void OrderBook::SetCallback(std::function<void(Trade*)> callback)
+{
+	m_tradeCallback = callback;
 }
 
 bool OrderBook::operator==(const OrderBook& other) const
@@ -194,8 +199,8 @@ void OrderBook::ExecuteOrder(Order& order)
 
 			// notify maker order
 			OrderUpdateType type = bestAskOrder.unfilledAmount > 0 ? OrderUpdateType::PartiallyFilled : OrderUpdateType::Filled;
-			OrderUpdate orderUpdate{ bestAskOrder.clientId, type, bestAskOrder };
-			NotifyOrderUpdate(orderUpdate);
+			Trade trade{ bestAskOrder.clientId, type, bestAskOrder };
+			Notify(trade);
 
 			if (FloatEqual(bestAskOrder.unfilledAmount, 0))
 			{
@@ -217,8 +222,8 @@ void OrderBook::ExecuteOrder(Order& order)
 
 			// notify maker order
 			OrderUpdateType type = bestBidOrder.unfilledAmount > 0 ? OrderUpdateType::PartiallyFilled : OrderUpdateType::Filled;
-			OrderUpdate orderUpdate{ bestBidOrder.clientId, type, bestBidOrder };
-			NotifyOrderUpdate(orderUpdate);
+			Trade trade{ bestBidOrder.clientId, type, bestBidOrder };
+			Notify(trade);
 
 			if (FloatEqual(bestBidOrder.unfilledAmount, 0))
 			{
@@ -233,8 +238,8 @@ void OrderBook::ExecuteOrder(Order& order)
 	{
 		// notify taker order
 		OrderUpdateType type = order.unfilledAmount > 0 ? OrderUpdateType::PartiallyFilled : OrderUpdateType::Filled;
-		OrderUpdate orderUpdate{ order.clientId, type, order };
-		NotifyOrderUpdate(orderUpdate);
+		Trade trade{ order.clientId, type, order };
+		Notify(trade);
 	}
 }
 
@@ -305,7 +310,7 @@ void OrderBook::InsertPendingOrder(Order& order)
 
 	m_ordersMap[order.id] = order;
 	OrderUpdate orderUpdate{ order.clientId, OrderUpdateType::Open, order };
-	NotifyOrderUpdate(orderUpdate);
+	Notify(orderUpdate);
 }
 
 bool OrderBook::CancelOrderFromQueue(const OrderId& orderId, std::deque<Order>& queue)
@@ -322,10 +327,18 @@ bool OrderBook::CancelOrderFromQueue(const OrderId& orderId, std::deque<Order>& 
 	return false;
 }
 
-void OrderBook::NotifyOrderUpdate(const OrderUpdate& orderUpdate)
+void OrderBook::Notify(const OrderUpdate& orderUpdate)
 {
 	if (m_isTest)
 		return;
 	OrderUpdate o = orderUpdate;
-	m_callback(&o);
+	m_orderUpdateCallback(&o);
+}
+
+void OrderBook::Notify(const Trade& trade)
+{
+	if (m_isTest)
+		return;
+	Trade t = trade;
+	m_tradeCallback(&t);
 }

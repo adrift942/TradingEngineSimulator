@@ -20,6 +20,8 @@ public:
 
 	void Notify(const OrderUpdate& orderUpdate) override;
 
+	void Notify(const Trade& trade) override;
+
 public:
 	ClientId id;
 

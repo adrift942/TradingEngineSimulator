@@ -12,8 +12,10 @@ static OrderId orderIdCount = 1000;
 
 MatchingEngine::MatchingEngine()
 {
-	auto callback = std::bind(&MatchingEngine::NotifyOrderUpdate, this, std::placeholders::_1);
-	m_orderBook.SetOrderUpdateCallback(callback);
+	auto orderUpdateCallback = std::bind(&MatchingEngine::NotifyOrderUpdate, this, std::placeholders::_1);
+	m_orderBook.SetCallback(orderUpdateCallback);
+	auto tradeCallback = std::bind(&MatchingEngine::NotifyTrade, this, std::placeholders::_1);
+	m_orderBook.SetCallback(tradeCallback);
 
 	// start processing thread
 	m_isProcessing = true;
@@ -143,5 +145,12 @@ void MatchingEngine::NotifyOrderUpdate(OrderUpdate* orderUpdate)
 	if (m_clientMap.count(orderUpdate->clientId) == 0)
 		return;
 	m_clientMap[orderUpdate->clientId]->Notify(*orderUpdate);
+}
+
+void MatchingEngine::NotifyTrade(Trade* trade)
+{
+	if (m_clientMap.count(trade->clientId) == 0)
+		return;
+	m_clientMap[trade->clientId]->Notify(*trade);
 }
 

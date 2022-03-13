@@ -56,6 +56,9 @@
     <ClInclude Include="include\OrderUpdate.h">
       <Filter>Header Files\data_types</Filter>
     </ClInclude>
+    <ClInclude Include="include\Trade.h">
+      <Filter>Header Files\data_types</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Client.cpp">

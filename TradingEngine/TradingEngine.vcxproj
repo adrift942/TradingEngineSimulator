@@ -156,6 +156,7 @@
     <ClInclude Include="include\Order.h" />
     <ClInclude Include="include\OrderBook.h" />
     <ClInclude Include="include\OrderUpdate.h" />
+    <ClInclude Include="include\Trade.h" />
     <ClInclude Include="include\Util.h" />
   </ItemGroup>
   <ItemGroup>
