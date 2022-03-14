@@ -16,6 +16,6 @@ int main()
     client2.InsertOrder(Order(false, 10.01f, 6000.f));
     client3.InsertOrder(Order(true, 10.01f, 1000.f));
 
-    std::this_thread::sleep_for(60s);
+    std::this_thread::sleep_for(10s);
     std::cout << "\nDone" << std::endl;
 }

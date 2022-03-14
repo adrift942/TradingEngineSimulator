@@ -79,58 +79,77 @@ bool OrderBook::CancelOrder(const OrderId& orderId)
 	const auto order = m_ordersMap[orderId];
 	m_ordersMap.erase(orderId);
 
+	std::forward_list<std::deque<Order>> priceList;
 	if (order.isBuy)
-	{
-		if (order.price > GetBestBidPrice())
-		{
-			return false;
-		}
-		else
-		{
-			auto it = m_bids.begin();
-			auto prevIt = it;
-			while (order.price != it->front().price)
-			{
-				prevIt = it;
-				it++;
-				if (it == m_bids.end() || order.price > it->front().price)
-					return false;
-			}
-			auto res = CancelOrderFromQueue(order.id, *it);
-			if (it->empty())
-				if (it == prevIt)
-					m_bids.pop_front();
-				else
-					m_bids.erase_after(prevIt);
-			return res;
-		}
-	}
+		priceList = m_bids;
 	else
+		priceList = m_asks;
+
+	auto it = priceList.begin();
+	auto prevIt = it;
+	while (order.price != it->front().price)
 	{
-		if (order.price < GetBestAskPrice())
-		{
-			return false;
-		}
-		else
-		{
-			auto it = m_asks.begin();
-			auto prevIt = it;
-			while (order.price != it->front().price)
-			{
-				prevIt = it;
-				it++;
-				if (it == m_asks.end() || order.price < it->front().price)
-					return false;
-			}
-			auto res = CancelOrderFromQueue(order.id, *it);
-			if (it->empty())
-				if (it == prevIt)
-					m_asks.pop_front();
-				else
-					m_asks.erase_after(prevIt);
-			return res;
-		}
+		prevIt = it;
+		it++;
 	}
+
+	//auto res = CancelOrderFromQueue(order.id, *it);
+	std::deque<Order>& queue = *it;
+	auto queueit = queue.begin();
+	while (queueit != queue.end())
+	{
+		if (queueit->id == order.id)
+		{
+			queue.erase(queueit);
+			break;
+		}
+		queueit++;
+	}
+
+	if (it->empty())
+		if (it == prevIt)
+			priceList.pop_front();
+		else
+			priceList.erase_after(prevIt);
+
+	//if (order.isBuy)
+	//{
+	//	auto it = m_bids.begin();
+	//	auto prevIt = it;
+	//	while (order.price != it->front().price)
+	//	{
+	//		prevIt = it;
+	//		it++;
+	//		if (it == m_bids.end() || order.price > it->front().price)
+	//			return false;
+	//	}
+	//	auto res = CancelOrderFromQueue(order.id, *it);
+	//	if (it->empty())
+	//		if (it == prevIt)
+	//			m_bids.pop_front();
+	//		else
+	//			m_bids.erase_after(prevIt);
+	//	return res;
+	//}
+	//else
+	//{
+	//	auto it = m_asks.begin();
+	//	auto prevIt = it;
+	//	while (order.price != it->front().price)
+	//	{
+	//		prevIt = it;
+	//		it++;
+	//		if (it == m_asks.end() || order.price < it->front().price)
+	//			return false;
+	//	}
+	//	auto res = CancelOrderFromQueue(order.id, *it);
+	//	if (it->empty())
+	//		if (it == prevIt)
+	//			m_asks.pop_front();
+	//		else
+	//			m_asks.erase_after(prevIt);
+	//	return res;
+	//}
 
 	OrderUpdate orderUpdate{ order.clientId, OrderUpdateType::Canceled, order};
 	Notify(orderUpdate);
@@ -172,6 +191,31 @@ bool OrderBook::operator==(const OrderBook& other) const
 	}
 
 	if (it1 != m_asks.end() || it2 != other.m_asks.end())
+		return false;
+
+	it1 = m_bids.begin();
+	it2 = other.m_bids.begin();
+
+	while (it1 != m_bids.end() && it2 != other.m_bids.end())
+	{
+		auto q1 = *it1;
+		auto q2 = *it2;
+
+		if (q1.size() != q2.size())
+			return false;
+		while (q1.size() > 0)
+		{
+			if (q1.front() != q2.front())
+				return false;
+			q1.pop_front();
+			q2.pop_front();
+		}
+
+		it1++;
+		it2++;
+	}
+
+	if (it1 != m_bids.end() || it2 != other.m_bids.end())
 		return false;
 
 	return true;
@@ -261,13 +305,14 @@ void OrderBook::InsertPendingOrder(Order& order)
 				prevIt = it;
 				it++;
 			}
+
 			if (prevIt == it)
 			{
 				m_bids.front().push_back(order);
 			}
-			else if (FloatEqual(prevIt->front().price, order.price))
+			else if (FloatEqual(it->front().price, order.price))
 			{
-				prevIt->push_back(order);
+				it->push_back(order);
 			}
 			else
 			{
@@ -296,9 +341,9 @@ void OrderBook::InsertPendingOrder(Order& order)
 			{
 				m_asks.front().push_back(order);
 			}
-			else if (FloatEqual(prevIt->front().price, order.price))
+			else if (FloatEqual(it->front().price, order.price))
 			{
-				prevIt->push_back(order);
+				it->push_back(order);
 			}
 			else
 			{
@@ -323,6 +368,7 @@ bool OrderBook::CancelOrderFromQueue(const OrderId& orderId, std::deque<Order>& 
 			queue.erase(it);
 			return true;
 		}
+		it++;
 	}
 	return false;
 }
