@@ -5,8 +5,6 @@
 struct OrderBookTest : testing::Test {
 
 	OrderBookTest() {
-		orderBook.SetIsTest(true);
-
 		std::forward_list<std::deque<Order>> bids;
 		bids.push_front(std::deque<Order>{Order(true, 9.96f, 40000.f) });
 		bids.push_front(std::deque<Order>{Order(true, 9.97f, 2000.f )});
@@ -21,8 +19,8 @@ struct OrderBookTest : testing::Test {
 		asks.push_front(std::deque<Order>{Order(false, 10.04f, 8000.f)});
 		asks.push_front(std::deque<Order>{Order(false, 10.02f, 10000.f) }); // best ask
 
-		orderBook.m_bids = bids;
-		orderBook.m_asks = asks;
+		orderBook = OrderBook(bids, asks);
+		orderBook.SetIsTest(true);
 	}
 
 	OrderBook orderBook;
@@ -50,9 +48,7 @@ TEST_F(OrderBookTest, Insert1)
 	asks.push_front(std::deque<Order>{Order(false, 10.06f, 6000.f), Order(false, 10.06f, 100.f)});
 	asks.push_front(std::deque<Order>{Order(false, 10.04f, 8000.f), Order(false, 10.04f, 3100.f)});
 	asks.push_front(std::deque<Order>{Order(false, 10.02f, 10000.f) });
-	OrderBook res;
-	res.m_bids = bids;
-	res.m_asks = asks;
+	OrderBook res(bids, asks);
 
 	EXPECT_EQ(orderBook, res);
 }
@@ -65,7 +61,6 @@ TEST_F(OrderBookTest, Insert2)
 	order = Order(false, 10.f, 500);
 	orderBook.InsertOrder(order);
 
-	OrderBook res;
 	std::forward_list<std::deque<Order>> bids;
 	bids.push_front(std::deque<Order>{Order(true, 9.96f, 40000.f) });
 	bids.push_front(std::deque<Order>{Order(true, 9.97f, 2000.f)});
@@ -78,9 +73,7 @@ TEST_F(OrderBookTest, Insert2)
 	asks.push_front(std::deque<Order>{Order(false, 10.08f, 20000.f) });
 	asks.push_front(std::deque<Order>{Order(false, 10.06f, 6000.f)});
 	asks.push_front(std::deque<Order>{Order(false, 10.04f, 8000.f)});
-
-	res.m_bids = bids;
-	res.m_asks = asks;
+	OrderBook res(bids, asks);
 
 	EXPECT_TRUE(orderBook == res);
 }
@@ -104,9 +97,7 @@ TEST_F(OrderBookTest, Insert3)
 	asks.push_front(std::deque<Order>{Order(false, 10.06f, 6000.f)});
 	asks.push_front(std::deque<Order>{Order(false, 10.04f, 8000.f)});
 	asks.push_front(std::deque<Order>{Order(false, 10.02f, 10000.f)});
-	OrderBook res;
-	res.m_bids = bids;
-	res.m_asks = asks;
+	OrderBook res(bids, asks);
 
 	EXPECT_EQ(orderBook, res);
 }
@@ -140,9 +131,7 @@ TEST_F(OrderBookTest, CancelOrder1)
 	asks.push_front(std::deque<Order>{Order(false, 10.06f, 6000.f)});
 	asks.push_front(std::deque<Order>{Order(false, 10.04f, 8000.f)});
 	asks.push_front(std::deque<Order>{Order(false, 10.02f, 10000.f) });
-	OrderBook res;
-	res.m_bids = bids;
-	res.m_asks = asks;
+	OrderBook res(bids, asks);
 
 	EXPECT_TRUE(orderBook == res);
 }
@@ -175,9 +164,7 @@ TEST_F(OrderBookTest, CancelOrder2)
 	asks.push_front(std::deque<Order>{Order(false, 10.05f, 2000.f)});
 	asks.push_front(std::deque<Order>{Order(false, 10.04f, 8000.f)});
 	asks.push_front(std::deque<Order>{Order(false, 10.02f, 10000.f) });
-	OrderBook res;
-	res.m_bids = bids;
-	res.m_asks = asks;
+	OrderBook res(bids, asks);
 
 	EXPECT_TRUE(orderBook == res);
 
@@ -199,8 +186,7 @@ TEST_F(OrderBookTest, CancelOrder2)
 	asks.push_front(std::deque<Order>{Order(false, 10.06f, 6000.f)});
 	asks.push_front(std::deque<Order>{Order(false, 10.04f, 8000.f)});
 	asks.push_front(std::deque<Order>{Order(false, 10.02f, 10000.f) });
-	res.m_bids = bids;
-	res.m_asks = asks;
+	res = OrderBook(bids, asks);
 
 	EXPECT_TRUE(orderBook == res);
 }

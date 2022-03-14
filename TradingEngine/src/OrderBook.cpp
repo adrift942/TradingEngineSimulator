@@ -2,6 +2,12 @@
 #include <float.h>
 
 
+OrderBook::OrderBook(std::forward_list<std::deque<Order>>& bids, std::forward_list<std::deque<Order>>& asks)
+{
+	m_bids = bids;
+	m_asks = asks;
+}
+
 // PUBLIC METHODS
 float OrderBook::GetBestBidPrice() const
 {
@@ -19,24 +25,6 @@ float OrderBook::GetBestAskPrice() const
 	else if (m_asks.front().empty())
 		throw std::exception("Best ask is empty and has not been removed");
 	return m_asks.front().front().price;
-};
-
-float OrderBook::GetBestBidAmount() const
-{
-	if (m_bids.empty())
-		throw std::exception("Order book has no bids");		
-	else if (m_bids.front().empty())
-		throw std::exception("Best bid is empty and has not been removed");
-	return m_bids.front().front().unfilledAmount;
-};
-
-float OrderBook::GetBestAskAmount() const
-{
-	if (m_asks.empty())
-		throw std::exception("Order book has no asks");
-	else if (m_asks.front().empty())
-		throw std::exception("Best ask is empty and has not been removed");
-	return m_asks.front().front().unfilledAmount;
 };
 
 bool OrderBook::OrderExists(const OrderId& orderId) const

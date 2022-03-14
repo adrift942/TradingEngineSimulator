@@ -27,12 +27,6 @@ MatchingEngine::MatchingEngine()
 }
 
 // PUBLIC METHODS
-void MatchingEngine::Stop()
-{
-	m_isProcessing = false;
-	m_processingThread->join();
-}
-
 void MatchingEngine::InsertOrder(const ClientId& clientId, const Order& i_order)
 {
 	// assuming the client has enough balance to place the order
@@ -82,11 +76,16 @@ void MatchingEngine::ReceiveMarketDataStream(const std::vector<Order>& orders)
 	}
 }
 
+void MatchingEngine::Stop()
+{
+	m_isProcessing = false;
+	m_processingThread->join();
+}
+
 // PRIVATE METHODS
 void MatchingEngine::AddTransactionToProcessingQueue(const Transaction& transaction)
 {
 	std::unique_lock<std::mutex> locker(m_mu);
-	m_cv.wait(locker, []() { return true; });
 	m_transactionsQueue->push_back(transaction);
 	locker.unlock();
 	m_cv.notify_one();

@@ -13,6 +13,16 @@ void Client::InsertOrder(const Order& order) const
 	m_engine->InsertOrder(id, order);
 }
 
+void Client::AmendOrder(const OrderId& orderId, const Order& order) const
+{
+	m_engine->AmendOrder(id, orderId, order);
+}
+
+void Client::CancelOrder(const OrderId& orderId) const
+{
+	m_engine->CancelOrder(id, orderId);
+}
+
 void Client::Notify(const Ack& ack)
 {
 	std::cout << "Client ID " << id << " response from server: " << ack << std::endl;
