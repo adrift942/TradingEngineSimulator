@@ -135,7 +135,7 @@ void MatchingEngine::ProcessTransactionsQueue()
 			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - start);
 			if (duration.count() >= 1000)
 			{
-				std::cout << "Processed " << m_txPerSecondCounter << " transactions" << std::endl;
+				std::cout << "Processed " << m_txPerSecondCounter << " txs/sec" << std::endl;
 				m_txPerSecondCounter = 0;
 				start = std::chrono::high_resolution_clock::now();
 			}

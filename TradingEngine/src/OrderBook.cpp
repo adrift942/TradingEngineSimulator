@@ -61,6 +61,7 @@ bool OrderBook::AmendOrder(const OrderId& orderId, const Order& i_order)
 	order.id = orderId;
 	InsertOrder(order);
 
+	// notify the client that the order has been amended
 	OrderUpdate orderUpdate{ order.clientId, OrderUpdateType::Amended, order };
 	Notify(orderUpdate);
 	return true;
@@ -73,59 +74,50 @@ bool OrderBook::CancelOrder(const OrderId& orderId)
 
 	const auto order = m_ordersMap[orderId];
 	m_ordersMap.erase(orderId);
+		
+	auto it = m_bids.begin();
+	if (!order.isBuy)
+		it = m_asks.begin();
 
-	if (order.isBuy)
+	auto prevIt = it; // auxiliary iterator
+
+	// cycle over price lines until the order price is found
+	while (order.price != it->front().price)
 	{
-		auto it = m_bids.begin();
-		auto prevIt = it;
-		while (order.price != it->front().price)
-		{
-			prevIt = it;
-			it++;
-		}
+		prevIt = it;
+		it++;
+	}
 
-		for (auto queueit = it->begin(); queueit != it->end(); queueit++)
+	// cycle over the current line until the order id is found, and erase it
+	for (auto queueit = it->begin(); queueit != it->end(); queueit++)
+	{
+		if (queueit->id == order.id)
 		{
-			if (queueit->id == order.id)
-			{
-				it->erase(queueit);
-				break;
-			}
+			it->erase(queueit);
+			break;
 		}
+	}
 
-		if (it->empty())
+	// remove price line if empty
+	if (it->empty())
+	{
+		if (order.isBuy)
+		{
 			if (it == prevIt)
 				m_bids.pop_front();
 			else
 				m_bids.erase_after(prevIt);
-	}
-	else
-	{
-		auto it = m_asks.begin();
-		auto prevIt = it;
-		while (order.price != it->front().price)
-		{
-			prevIt = it;
-			it++;
 		}
-
-		for (auto queueit = it->begin(); queueit != it->end(); queueit++)
+		else
 		{
-			if (queueit->id == order.id)
-			{
-				it->erase(queueit);
-				break;
-			}
-		}
-
-		if (it->empty())
 			if (it == prevIt)
 				m_asks.pop_front();
 			else
 				m_asks.erase_after(prevIt);
+		}
 	}
 
-
+	// notify client that the order has been canceled
 	OrderUpdate orderUpdate{ order.clientId, OrderUpdateType::Canceled, order};
 	Notify(orderUpdate);
 	return true;
@@ -222,7 +214,10 @@ void OrderBook::ExecuteOrder(Order& order)
 
 			if (FloatEqual(bestAskOrder.unfilledAmount, 0))
 			{
+				// if the best ask order has been completely filled, remove it
 				m_asks.front().pop_front();
+
+				// if there are no more ask orders at this price, remove this price
 				if (m_asks.front().empty())
 					m_asks.pop_front();
 			}
@@ -244,7 +239,10 @@ void OrderBook::ExecuteOrder(Order& order)
 
 			if (FloatEqual(bestBidOrder.unfilledAmount, 0))
 			{
+				// if the best bid order has been completely filled, remove it
 				m_bids.front().pop_front();
+
+				// if there are no more bid orders at this price, remove this price
 				if (m_bids.front().empty())
 					m_bids.pop_front();
 			}
@@ -261,18 +259,27 @@ void OrderBook::ExecuteOrder(Order& order)
 
 void OrderBook::InsertPendingOrder(Order& order)
 {
+	// insert pending order in the book according to price-time priority
+
 	if (order.isBuy)
 	{		
 		if (order.price > GetBestBidPrice())
 		{
+			// if the order price is better than the best bid, put it in front
 			auto tmp = std::deque<Order>{ order };
 			m_bids.push_front(tmp);
+		}
+		else if (FloatEqual(order.price, GetBestBidPrice()))
+		{
+			// if the order price is equal to the best bid, append it to the first line
+			m_bids.front().push_back(order);
 		}
 		else
 		{
 			auto it = m_bids.begin();
 			auto prevIt = it;
-			while (it != m_bids.end() && order.price != it->front().price)
+			// cycle over bids until a less or equal price is found
+			while (it != m_bids.end() && order.price < it->front().price)
 			{
 				prevIt = it;
 				it++;
@@ -280,14 +287,18 @@ void OrderBook::InsertPendingOrder(Order& order)
 
 			if (prevIt == it)
 			{
-				m_bids.front().push_back(order);
+				// if there is only one price line, create another
+				auto tmp = std::deque<Order>{ order };
+				m_bids.insert_after(it, tmp);
 			}
 			else if (it != m_bids.end() && FloatEqual(it->front().price, order.price))
 			{
+				// if the price has been found, append it
 				it->push_back(order);
 			}
 			else
 			{
+				// create last price line
 				auto tmp = std::deque<Order>{ order };
 				m_bids.insert_after(prevIt, tmp);
 			}
@@ -295,30 +306,41 @@ void OrderBook::InsertPendingOrder(Order& order)
 	}
 	else
 	{
+		// if the order price is better than the best ask, put it in front
 		if (order.price < GetBestAskPrice())
 		{
 			auto tmp = std::deque<Order>{ order };
 			m_asks.push_front(tmp);
 		}
+		else if (FloatEqual(order.price, GetBestAskPrice()))
+		{
+			// if the order price is equal to the best ask, append it to the first line
+			m_asks.front().push_back(order);
+		}
 		else
 		{
 			auto it = m_asks.begin();
 			auto prevIt = it;
+			// cycle over asks until a greater or equal price is found
 			while (it != m_asks.end() && order.price > it->front().price)
 			{
 				prevIt = it;
 				it++;
 			}
+
 			if (prevIt == it)
 			{
+				// if there is only one price line, create another
 				m_asks.front().push_back(order);
 			}
 			else if (it != m_asks.end() && FloatEqual(it->front().price, order.price))
 			{
+				// if the price has been found, append it
 				it->push_back(order);
 			}
 			else
 			{
+				// create last price line
 				auto tmp = std::deque<Order>{ order };
 				m_asks.insert_after(prevIt, tmp);
 			}
