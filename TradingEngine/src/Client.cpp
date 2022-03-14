@@ -25,10 +25,10 @@ Ack Client::CancelOrder(const OrderId& orderId) const
 
 void Client::Notify(const OrderUpdate& orderUpdate)
 {
-	std::cout << "Client ID " << id << " received order update notification: " << orderUpdate << std::endl;
+	//std::cout << "Client ID " << id << " received order update notification: " << orderUpdate << std::endl;
 }
 
 void Client::Notify(const Trade& trade)
 {
-	std::cout << "Client ID " << id << " received trade notification: " << trade << std::endl;
+	//std::cout << "Client ID " << id << " received trade notification: " << trade << std::endl;
 }

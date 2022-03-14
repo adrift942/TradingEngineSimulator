@@ -70,6 +70,4 @@ private:
 	std::shared_ptr<std::thread> m_streamDataThread = 0;	/*Thread to generate test data*/
 
 	std::map<ClientId, std::shared_ptr<IObserver>> m_clientMap{}; /*Map to notify the clients based on their ID*/
-
-	uint64_t m_txPerSecondCounter = 0; /*Counter of the number of transactions per second*/
 };

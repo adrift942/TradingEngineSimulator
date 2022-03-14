@@ -117,7 +117,6 @@ void MatchingEngine::ProcessTransactionsQueue()
 		{
 			const auto& transaction = m_transactionsQueue->front();
 			m_transactionsQueue->pop_front();
-			m_txPerSecondCounter++;
 
 			switch (transaction.type)
 			{
@@ -130,14 +129,6 @@ void MatchingEngine::ProcessTransactionsQueue()
 			case TransactionType::Cancel:
 				m_orderBook.CancelOrder(transaction.orderId);
 				break;
-			}
-			auto now = std::chrono::high_resolution_clock::now();
-			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - start);
-			if (duration.count() >= 1000)
-			{
-				std::cout << "Processed " << m_txPerSecondCounter << " txs/sec" << std::endl;
-				m_txPerSecondCounter = 0;
-				start = std::chrono::high_resolution_clock::now();
 			}
 		}
 	}
