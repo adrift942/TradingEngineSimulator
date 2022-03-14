@@ -4,12 +4,13 @@
 struct Trade
 {
 	ClientId clientId;
-	OrderUpdateType orderUpdateType;
-	Order order;
+	bool isBuy;
+	float price;
+	float amount;
 
-	friend std::ostream& operator<<(std::ostream& os, const Trade& orderUpdate)
+	friend std::ostream& operator<<(std::ostream& os, const Trade& trade)
 	{
-
-		return os;
+		std::string side = trade.isBuy ? "bought" : "sold";
+		return os << side << " " << trade.amount << " at " << trade.price;
 	}
 };

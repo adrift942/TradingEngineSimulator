@@ -143,10 +143,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="README.txt" />
-    <Text Include="TODO.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="include\Ack.h" />
     <ClInclude Include="include\Client.h" />
     <ClInclude Include="include\Common.h" />

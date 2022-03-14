@@ -11,24 +11,27 @@ struct OrderUpdate
 
 	friend std::ostream& operator<<(std::ostream& os, const OrderUpdate& orderUpdate)
 	{
-		std::string msg;
+		std::string type;
 		switch (orderUpdate.orderUpdateType)
 		{
+		case OrderUpdateType::Open:
+			type = "open";
+			break;
 		case OrderUpdateType::Filled:
-			msg = "filled";
+			type = "filled";
 			break;
 		case OrderUpdateType::PartiallyFilled:
-			msg = "partially filled";
+			type = "partially filled";
 			break;
 		case OrderUpdateType::Amended:
-			msg = "amended";
+			type = "amended";
 			break;
 		case OrderUpdateType::Canceled:
-			msg = "canceled";
+			type = "canceled";
 			break;
 		}
 
-		os << msg;
+		os << type << " " << orderUpdate.order;
 		return os;
 	}
 };

@@ -8,11 +8,7 @@ static ClientId clientIdCount = 100;
 class Client : public IObserver
 {
 public:
-	Client(const std::shared_ptr<MatchingEngine> engine) : m_engine{engine}
-	{
-		id = clientIdCount++;
-		engine->SubscribeClient(id, std::make_shared<Client>(*this));
-	};
+	Client(const std::shared_ptr<MatchingEngine> engine);
 
 	void InsertOrder(const Order& order) const;
 

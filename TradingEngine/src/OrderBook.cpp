@@ -222,8 +222,7 @@ void OrderBook::ExecuteOrder(Order& order)
 			bestAskOrder.unfilledAmount -= tradeAmount;
 
 			// notify maker order
-			OrderUpdateType type = bestAskOrder.unfilledAmount > 0 ? OrderUpdateType::PartiallyFilled : OrderUpdateType::Filled;
-			Trade trade{ bestAskOrder.clientId, type, bestAskOrder };
+			Trade trade{ bestAskOrder.clientId, false, order.price, tradeAmount};
 			Notify(trade);
 
 			if (FloatEqual(bestAskOrder.unfilledAmount, 0))
@@ -245,8 +244,7 @@ void OrderBook::ExecuteOrder(Order& order)
 			bestBidOrder.unfilledAmount -= tradeAmount;
 
 			// notify maker order
-			OrderUpdateType type = bestBidOrder.unfilledAmount > 0 ? OrderUpdateType::PartiallyFilled : OrderUpdateType::Filled;
-			Trade trade{ bestBidOrder.clientId, type, bestBidOrder };
+			Trade trade{ bestBidOrder.clientId, true, order.price, tradeAmount};
 			Notify(trade);
 
 			if (FloatEqual(bestBidOrder.unfilledAmount, 0))
@@ -261,8 +259,7 @@ void OrderBook::ExecuteOrder(Order& order)
 	if (executed)
 	{
 		// notify taker order
-		OrderUpdateType type = order.unfilledAmount > 0 ? OrderUpdateType::PartiallyFilled : OrderUpdateType::Filled;
-		Trade trade{ order.clientId, type, order };
+		Trade trade{ order.clientId, order.isBuy, order.price, order.amount-order.unfilledAmount };
 		Notify(trade);
 	}
 }

@@ -12,10 +12,14 @@ int main()
     auto client2 = Client(engine);
     auto client3 = Client(engine);
 
-    client1.InsertOrder(Order(true, 10.01f, 5000.f));
-    client2.InsertOrder(Order(false, 10.01f, 6000.f));
-    client3.InsertOrder(Order(true, 10.01f, 1000.f));
+    for (auto i = 0; i < 10; i++)
+    {
+        client1.InsertOrder(Order(true, 10.01f, 5000.f));
+        client2.InsertOrder(Order(false, 10.01f, 6000.f));
+        client3.InsertOrder(Order(true, 10.01f, 1000.f));
+        
+        std::this_thread::sleep_for(1s);
+    }
 
-    std::this_thread::sleep_for(10s);
     std::cout << "\nDone" << std::endl;
 }

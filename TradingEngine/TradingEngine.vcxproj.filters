@@ -18,14 +18,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="TODO.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
-    <Text Include="README.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="include\Client.h">
       <Filter>Header Files</Filter>
     </ClInclude>
