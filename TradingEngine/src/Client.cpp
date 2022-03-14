@@ -8,24 +8,19 @@ Client::Client(const std::shared_ptr<MatchingEngine> engine) : m_engine{ engine 
 	engine->SubscribeClient(id, std::make_shared<Client>(*this));
 }
 
-void Client::InsertOrder(const Order& order) const
+Ack Client::InsertOrder(const Order& order) const
 {
-	m_engine->InsertOrder(id, order);
+	return m_engine->InsertOrder(id, order);
 }
 
-void Client::AmendOrder(const OrderId& orderId, const Order& order) const
+Ack Client::AmendOrder(const OrderId& orderId, const Order& order) const
 {
-	m_engine->AmendOrder(id, orderId, order);
+	return m_engine->AmendOrder(id, orderId, order);
 }
 
-void Client::CancelOrder(const OrderId& orderId) const
+Ack Client::CancelOrder(const OrderId& orderId) const
 {
-	m_engine->CancelOrder(id, orderId);
-}
-
-void Client::Notify(const Ack& ack)
-{
-	std::cout << "Client ID " << id << " response from server: " << ack << std::endl;
+	return m_engine->CancelOrder(id, orderId);
 }
 
 void Client::Notify(const OrderUpdate& orderUpdate)

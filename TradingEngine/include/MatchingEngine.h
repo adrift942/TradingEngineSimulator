@@ -29,13 +29,13 @@ public:
 	MatchingEngine();
 	
 	/*Insert an order in the order book, The order is executed if marketable, the remaining unfilled amount is inserted as a pending order.*/
-	void InsertOrder(const ClientId& clientId, const Order& order);
+	Ack InsertOrder(const ClientId& clientId, const Order& order);
 
 	/*Cancel an order given its ID and create a new order with the same ID.*/
-	void AmendOrder(const ClientId& clientId, const OrderId& orderId, const Order& order);
+	Ack AmendOrder(const ClientId& clientId, const OrderId& orderId, const Order& order);
 
 	/*Removes an order from the order book given its ID.*/
-	void CancelOrder(const ClientId& clientId, const OrderId& orderId);
+	Ack CancelOrder(const ClientId& clientId, const OrderId& orderId);
 
 	/*Receive a stream of orders that simulate a 5-level orderbook snapshot.*/
 	void ReceiveMarketDataStream(const std::vector<Order>& orders);
@@ -53,8 +53,6 @@ private:
 	void ProcessTransactionsQueue();
 
 	void StreamMarketData();
-
-	void NotifyAck(const ClientId& clientId, const Ack& ack);
 
 	void NotifyOrderUpdate(std::shared_ptr<OrderUpdate> orderUpdate);
 

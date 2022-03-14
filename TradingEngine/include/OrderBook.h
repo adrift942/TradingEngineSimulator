@@ -60,11 +60,12 @@ private:
 private:
 	std::forward_list<std::deque<Order>> m_bids; /*List ordered by descending price of queues of bid orders*/
 	std::forward_list<std::deque<Order>> m_asks; /*List ordered by ascending price of queues of ask orders*/
-
-	std::map<OrderId, Order> m_ordersMap; /*Auxiliary map for faster lookup of orders in the orderbook*/
-
+	
 	std::function<void(std::shared_ptr<OrderUpdate>)> m_orderUpdateCallback;
 	std::function<void(std::shared_ptr<Trade>)> m_tradeCallback;
 
 	bool m_isTest = false;
+
+public:
+	std::map<OrderId, Order> m_ordersMap; /*Auxiliary map for faster lookup of orders in the orderbook*/
 };

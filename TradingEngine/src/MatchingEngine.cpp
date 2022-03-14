@@ -27,7 +27,7 @@ MatchingEngine::MatchingEngine()
 }
 
 // PUBLIC METHODS
-void MatchingEngine::InsertOrder(const ClientId& clientId, const Order& i_order)
+Ack MatchingEngine::InsertOrder(const ClientId& clientId, const Order& i_order)
 {
 	// assuming the client has enough balance to place the order
 	auto order = i_order;
@@ -35,35 +35,48 @@ void MatchingEngine::InsertOrder(const ClientId& clientId, const Order& i_order)
 	order.clientId = clientId;
 	std::ostringstream ss;
 	ss << order;
-	NotifyAck(clientId, Ack{ true, "Insert " + ss.str() });
+
+	m_orderBook.m_ordersMap[order.id] = order;
 
 	AddTransactionToProcessingQueue(Transaction{ order.id, order, TransactionType::Insert });
+
+	return Ack{ true, "Insert " + ss.str(), order.id };
 }
 
-void MatchingEngine::AmendOrder(const ClientId& clientId, const OrderId& orderId, const Order& order)
+Ack MatchingEngine::AmendOrder(const ClientId& clientId, const OrderId& orderId, const Order& i_order)
 {
+	Ack ack;
+	
 	// validation
 	if (m_orderBook.OrderExists(orderId))
 	{
 		std::ostringstream ss;
+		auto order = i_order;
+		order.id = orderId;
 		ss << order;
-		NotifyAck(clientId, Ack{ true, "Amend " + ss.str() });
+		ack = Ack{ true, "Amend " + ss.str(), orderId };
 		AddTransactionToProcessingQueue({ orderId, order, TransactionType::Amend });
 	}
 	else
-		NotifyAck(clientId, Ack{ false, "Order ID " + std::to_string(orderId) + " not found."});
+		ack = Ack{ false, "Order ID " + std::to_string(orderId) + " not found.", orderId };
+	
+	return ack;
 }
 
-void MatchingEngine::CancelOrder(const ClientId& clientId, const OrderId& orderId)
+Ack MatchingEngine::CancelOrder(const ClientId& clientId, const OrderId& orderId)
 {
+	Ack ack;
+
 	// validation
-	if (!m_orderBook.OrderExists(orderId))
+	if (m_orderBook.OrderExists(orderId))
 	{
-		NotifyAck(clientId, Ack{ true, "Cancel order with ID " + std::to_string(orderId) });
+		ack = Ack{ true, "Cancel order with ID " + std::to_string(orderId), orderId };
 		AddTransactionToProcessingQueue({ orderId, Order(), TransactionType::Cancel });
 	}
 	else
-		NotifyAck(clientId, Ack{ false, "Order ID " + std::to_string(orderId) + " not found." });
+		ack = Ack{ false, "Order ID " + std::to_string(orderId) + " not found.", orderId };
+
+	return ack;
 }
 
 void MatchingEngine::ReceiveMarketDataStream(const std::vector<Order>& orders)
@@ -140,13 +153,6 @@ void MatchingEngine::StreamMarketData()
 		streamer.GetData(orders);
 		ReceiveMarketDataStream(orders);		
 	}
-}
-
-void MatchingEngine::NotifyAck(const ClientId& clientId, const Ack& ack)
-{
-	if (m_clientMap.count(clientId) == 0)
-		return;
-	m_clientMap[clientId]->Notify(ack);
 }
 
 void MatchingEngine::NotifyOrderUpdate(std::shared_ptr<OrderUpdate> orderUpdate)

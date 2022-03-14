@@ -36,6 +36,13 @@ void OrderBook::InsertOrder(const Order& i_order)
 {
 	auto order = i_order;
 
+	if (!OrderExists(i_order.id))
+	{
+		// In this case the order has been canceled before being inserted
+		OrderUpdate orderUpdate{ order.clientId, OrderUpdateType::Canceled, order };
+		Notify(orderUpdate);
+	}
+
 	// Execute order if it is marketable
 	ExecuteOrder(order);
 
