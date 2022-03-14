@@ -87,19 +87,28 @@ TEST_F(OrderBookTest, Insert2)
 
 TEST_F(OrderBookTest, Insert3)
 {
-	orderBook.InsertOrder(Order(true, 10.f, 1800.f));
-	orderBook.InsertOrder(Order(true, 10.f, 1000.f));
-	orderBook.InsertOrder(Order(true, 9.99f, 2000.f));
-	orderBook.InsertOrder(Order(false, 9.99f, 11500.f));
-	EXPECT_FLOAT_EQ(orderBook.GetBestBidPrice(), 9.99f);
-	EXPECT_FLOAT_EQ(orderBook.GetBestBidAmount(), 1500.f);
+	orderBook.InsertOrder(Order(true, 9.95f, 1000.f));
+	orderBook.InsertOrder(Order(false, 10.11f, 1000.f));
 
-	orderBook.InsertOrder(Order(false, 10.02f, 800.f));
-	orderBook.InsertOrder(Order(false, 10.02f, 500.f));
-	orderBook.InsertOrder(Order(false, 10.03f, 2000.f));
-	orderBook.InsertOrder(Order(true, 10.03f, 11500.f));
-	EXPECT_FLOAT_EQ(orderBook.GetBestAskPrice(), 10.03f);
-	EXPECT_FLOAT_EQ(orderBook.GetBestAskAmount(), 1800.f);
+	std::forward_list<std::deque<Order>> bids;
+	bids.push_front(std::deque<Order>{Order(true, 9.95f, 1000.f)});
+	bids.push_front(std::deque<Order>{Order(true, 9.96f, 40000.f)});
+	bids.push_front(std::deque<Order>{Order(true, 9.97f, 2000.f)});
+	bids.push_front(std::deque<Order>{Order(true, 9.98f, 3000.f)});
+	bids.push_front(std::deque<Order>{Order(true, 9.99f, 8000.f)});
+	bids.push_front(std::deque<Order>{Order(true, 10.f, 200.f)});
+	std::forward_list<std::deque<Order>> asks;
+	asks.push_front(std::deque<Order>{Order(false, 10.11f, 1000.f) });
+	asks.push_front(std::deque<Order>{Order(false, 10.10f, 500.f) });
+	asks.push_front(std::deque<Order>{Order(false, 10.08f, 20000.f) });
+	asks.push_front(std::deque<Order>{Order(false, 10.06f, 6000.f)});
+	asks.push_front(std::deque<Order>{Order(false, 10.04f, 8000.f)});
+	asks.push_front(std::deque<Order>{Order(false, 10.02f, 10000.f)});
+	OrderBook res;
+	res.m_bids = bids;
+	res.m_asks = asks;
+
+	EXPECT_EQ(orderBook, res);
 }
 
 TEST_F(OrderBookTest, CancelOrder1)

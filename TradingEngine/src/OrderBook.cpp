@@ -270,7 +270,7 @@ void OrderBook::ExecuteOrder(Order& order)
 void OrderBook::InsertPendingOrder(Order& order)
 {
 	if (order.isBuy)
-	{
+	{		
 		if (order.price > GetBestBidPrice())
 		{
 			auto tmp = std::deque<Order>{ order };
@@ -280,7 +280,7 @@ void OrderBook::InsertPendingOrder(Order& order)
 		{
 			auto it = m_bids.begin();
 			auto prevIt = it;
-			while (it != m_bids.end() && order.price < it->front().price)
+			while (it != m_bids.end() && order.price != it->front().price)
 			{
 				prevIt = it;
 				it++;
@@ -290,7 +290,7 @@ void OrderBook::InsertPendingOrder(Order& order)
 			{
 				m_bids.front().push_back(order);
 			}
-			else if (FloatEqual(it->front().price, order.price))
+			else if (it != m_bids.end() && FloatEqual(it->front().price, order.price))
 			{
 				it->push_back(order);
 			}
@@ -321,7 +321,7 @@ void OrderBook::InsertPendingOrder(Order& order)
 			{
 				m_asks.front().push_back(order);
 			}
-			else if (FloatEqual(it->front().price, order.price))
+			else if (it != m_asks.end() && FloatEqual(it->front().price, order.price))
 			{
 				it->push_back(order);
 			}
