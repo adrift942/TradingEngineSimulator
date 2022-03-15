@@ -34,7 +34,10 @@ Ack MatchingEngine::InsertOrder(const ClientId& clientId, const Order& i_order)
 	order.id = orderIdCount++;
 	order.clientId = clientId;
 	std::ostringstream ss;
-	ss << order;		
+	ss << order;
+
+	// link this order id to client id
+	m_ordersOwnershipMap[order.id] = clientId;
 
 	AddTransactionToProcessingQueue(Transaction{ order.id, order, TransactionType::Insert });
 
@@ -45,9 +48,9 @@ Ack MatchingEngine::AmendOrder(const ClientId& clientId, const OrderId& orderId,
 {
 	Ack ack;
 	
-	// validation // TODO check order exists and belongs to client id
-	if (true)
-	{
+	// validation
+	if (m_ordersOwnershipMap.count(orderId) > 0 && m_ordersOwnershipMap[orderId] == clientId)
+	{		
 		std::ostringstream ss;
 		auto order = i_order;
 		order.id = orderId;
@@ -56,7 +59,9 @@ Ack MatchingEngine::AmendOrder(const ClientId& clientId, const OrderId& orderId,
 		AddTransactionToProcessingQueue({ orderId, order, TransactionType::Amend });
 	}
 	else
-		ack = Ack{ false, "Order ID " + std::to_string(orderId) + " not found.", orderId };
+	{
+		ack = Ack{ false, "Could not amend order " + std::to_string(orderId), orderId };
+	}
 	
 	return ack;
 }
@@ -65,21 +70,23 @@ Ack MatchingEngine::CancelOrder(const ClientId& clientId, const OrderId& orderId
 {
 	Ack ack;
 
-	// validation // TODO check order exists and belongs to client id
-	if (true)
+	// validation
+	if (m_ordersOwnershipMap.count(orderId) > 0 && m_ordersOwnershipMap[orderId] == clientId)
 	{
+		m_ordersOwnershipMap.erase(orderId);
 		ack = Ack{ true, "Cancel order with ID " + std::to_string(orderId), orderId };
 		AddTransactionToProcessingQueue({ orderId, Order(), TransactionType::Cancel });
 	}
 	else
-		ack = Ack{ false, "Order ID " + std::to_string(orderId) + " not found.", orderId };
+	{
+		ack = Ack{ false, "Could not cancel order ID " + std::to_string(orderId), orderId };
+	}
 
 	return ack;
 }
 
 void MatchingEngine::ReceiveMarketDataStream(const std::vector<Order>& orders)
 {
-	//std::cout << "Received market data stream" << std::endl;
 	for (auto i = 0; i < orders.size(); i++)
 	{
 		Transaction tx = { 0, orders[i], TransactionType::Insert };

@@ -70,4 +70,5 @@ private:
 	std::shared_ptr<std::thread> m_streamDataThread = 0;	/*Thread to generate test data*/
 
 	std::map<ClientId, std::shared_ptr<IObserver>> m_clientMap{}; /*Map to notify the clients based on their ID*/
+	std::map<OrderId, ClientId> m_ordersOwnershipMap{}; /*Map to keep track of ownership of orders*/
 };

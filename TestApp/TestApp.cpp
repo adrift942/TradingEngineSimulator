@@ -29,7 +29,7 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
     for (auto i = 0; i < 100000; i++)
     {
-        ack = client1.InsertOrder(Order(true, Randomize(10.02f), Randomize(5000.f)));
+        client1.InsertOrder(Order(true, Randomize(10.02f), Randomize(5000.f)));
         count++;
         client2.InsertOrder(Order(false, Randomize(10.21f), Randomize(6000.f)));
         count++;
