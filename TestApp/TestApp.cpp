@@ -31,9 +31,14 @@ int main()
     {
         ack = client1.InsertOrder(Order(true, Randomize(10.02f), Randomize(5000.f)));
         count++;
-        ack = client2.InsertOrder(Order(false, Randomize(10.21f), Randomize(6000.f)));
+        client2.InsertOrder(Order(false, Randomize(10.21f), Randomize(6000.f)));
         count++;
-        ack = client3.InsertOrder(Order(true, Randomize(9.91f), Randomize(1000.f)));
+        client1.CancelOrder(ack.orderId);
+        client3.InsertOrder(Order(true, Randomize(9.91f), Randomize(1000.f)));
+        count++;
+        ack = client3.InsertOrder(Order(true, Randomize(3.81f), Randomize(1000.f)));
+        count++;
+        client3.CancelOrder(ack.orderId);
         count++;
         
         auto now = std::chrono::high_resolution_clock::now();

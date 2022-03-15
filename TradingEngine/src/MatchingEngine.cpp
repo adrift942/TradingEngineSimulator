@@ -34,9 +34,7 @@ Ack MatchingEngine::InsertOrder(const ClientId& clientId, const Order& i_order)
 	order.id = orderIdCount++;
 	order.clientId = clientId;
 	std::ostringstream ss;
-	ss << order;
-
-	m_orderBook.m_ordersMap[order.id] = order;
+	ss << order;		
 
 	AddTransactionToProcessingQueue(Transaction{ order.id, order, TransactionType::Insert });
 
@@ -47,8 +45,8 @@ Ack MatchingEngine::AmendOrder(const ClientId& clientId, const OrderId& orderId,
 {
 	Ack ack;
 	
-	// validation
-	if (m_orderBook.OrderExists(orderId))
+	// validation // TODO check order exists and belongs to client id
+	if (true)
 	{
 		std::ostringstream ss;
 		auto order = i_order;
@@ -67,8 +65,8 @@ Ack MatchingEngine::CancelOrder(const ClientId& clientId, const OrderId& orderId
 {
 	Ack ack;
 
-	// validation
-	if (m_orderBook.OrderExists(orderId))
+	// validation // TODO check order exists and belongs to client id
+	if (true)
 	{
 		ack = Ack{ true, "Cancel order with ID " + std::to_string(orderId), orderId };
 		AddTransactionToProcessingQueue({ orderId, Order(), TransactionType::Cancel });
