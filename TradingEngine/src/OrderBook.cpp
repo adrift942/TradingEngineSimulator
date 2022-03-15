@@ -13,8 +13,6 @@ float OrderBook::GetBestBidPrice() const
 {
 	if (m_bids.empty())
 		return 0;
-	else if (m_bids.front().empty())
-		throw std::exception("Best bid is empty and has not been removed");
 	return m_bids.front().front().price;
 };
 
@@ -22,8 +20,6 @@ float OrderBook::GetBestAskPrice() const
 {
 	if (m_asks.empty())
 		return FLT_MAX;
-	else if (m_asks.front().empty())
-		throw std::exception("Best ask is empty and has not been removed");
 	return m_asks.front().front().price;
 };
 
@@ -63,14 +59,17 @@ bool OrderBook::CancelOrder(const OrderId& orderId)
 	bool found = false;
 	if (order.isBuy)
 	{
+		// cycle over the bid prices
 		for (auto it = m_bids.begin(); it != m_bids.end(); it++)
-		{
+		{			
 			if (it->front().price == order.price)
 			{				
+				// when price is found, cycle over the queue of orders
 				for (auto queueit = it->begin(); queueit != it->end(); queueit++)
 				{
 					if (queueit->id == order.id)
 					{
+						// when the order id is found, set order amount and unfilled amount to 0
 						queueit->amount = 0;
 						queueit->unfilledAmount = 0;
 						found = true;
@@ -83,14 +82,17 @@ bool OrderBook::CancelOrder(const OrderId& orderId)
 	}
 	else
 	{
+		// cycle over the ask prices
 		for (auto it = m_asks.begin(); it != m_asks.end(); it++)
 		{
 			if (it->front().price == order.price)
 			{
+				// when price is found, cycle over the queue of orders
 				for (auto queueit = it->begin(); queueit != it->end(); queueit++)
 				{
 					if (queueit->id == order.id)
 					{
+						// when the order id is found, set order amount and unfilled amount to 0
 						queueit->amount = 0;
 						queueit->unfilledAmount = 0;
 						found = true;
@@ -101,7 +103,6 @@ bool OrderBook::CancelOrder(const OrderId& orderId)
 			}
 		}
 	}
-
 
 	// notify client that the order has been canceled
 	OrderUpdate orderUpdate{ order.clientId, OrderUpdateType::Canceled, order};
@@ -121,6 +122,7 @@ void OrderBook::SetCallback(std::function<void(std::shared_ptr<Trade>)> callback
 
 bool OrderBook::operator==(const OrderBook& other) const
 {
+	// compare asks
 	auto it1 = m_asks.begin();
 	auto it2 = other.m_asks.begin();
 
@@ -146,6 +148,7 @@ bool OrderBook::operator==(const OrderBook& other) const
 	if (it1 != m_asks.end() || it2 != other.m_asks.end())
 		return false;
 
+	// compare bids
 	it1 = m_bids.begin();
 	it2 = other.m_bids.begin();
 

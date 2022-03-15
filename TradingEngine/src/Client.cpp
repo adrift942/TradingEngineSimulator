@@ -2,8 +2,9 @@
 #include <iostream>
 
 
-Client::Client(const std::shared_ptr<MatchingEngine> engine) : m_engine{ engine }
+Client::Client(const std::shared_ptr<MatchingEngine> engine, bool printNotifications) : m_engine{ engine }
 {
+	m_printNotifications = printNotifications;
 	id = clientIdCount++;
 	engine->SubscribeClient(id, std::make_shared<Client>(*this));
 }
@@ -25,10 +26,12 @@ Ack Client::CancelOrder(const OrderId& orderId) const
 
 void Client::Notify(const OrderUpdate& orderUpdate)
 {
-	//std::cout << "Client ID " << id << " received order update notification: " << orderUpdate << std::endl;
+	if (m_printNotifications)
+		std::cout << "Client ID " << id << " received order update notification: " << orderUpdate << std::endl;
 }
 
 void Client::Notify(const Trade& trade)
 {
-	//std::cout << "Client ID " << id << " received trade notification: " << trade << std::endl;
+	if (m_printNotifications)
+		std::cout << "Client ID " << id << " received trade notification: " << trade << std::endl;
 }

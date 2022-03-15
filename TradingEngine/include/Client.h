@@ -9,7 +9,7 @@ static ClientId clientIdCount = 100;
 class Client : public IObserver
 {
 public:
-	Client(const std::shared_ptr<MatchingEngine> engine);
+	Client(const std::shared_ptr<MatchingEngine> engine, bool printNotifications=false);
 
 	/*Insert order*/
 	Ack InsertOrder(const Order& order) const;
@@ -29,7 +29,8 @@ public:
 public:
 	ClientId id;
 
-private:	
+private:
+	bool m_printNotifications;
 	std::shared_ptr<MatchingEngine> m_engine;
 };
 
