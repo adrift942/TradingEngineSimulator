@@ -177,13 +177,14 @@ TEST_F(OrderBookTest, CancelOrder2)
 	bids.clear();
 	bids.push_front(std::deque<Order>{Order(true, 9.96f, 40000.f) });
 	bids.push_front(std::deque<Order>{Order(true, 9.97f, 2000.f)});
-	bids.push_front(std::deque<Order>{Order(true, 9.98f, 3000.f), Order(true, 9.98f, 5000.f)});
+	bids.push_front(std::deque<Order>{Order(true, 9.98f, 3000.f), Order(true, 9.98f, 0.f), Order(true, 9.98f, 5000.f)});
 	bids.push_front(std::deque<Order>{Order(true, 9.99f, 8000.f), Order(true, 9.99f, 1000.f)});
 	bids.push_front(std::deque<Order>{Order(true, 10.f, 200.f)});
 	asks.clear();
 	asks.push_front(std::deque<Order>{Order(false, 10.10f, 500.f) });
 	asks.push_front(std::deque<Order>{Order(false, 10.08f, 20000.f) });
 	asks.push_front(std::deque<Order>{Order(false, 10.06f, 6000.f)});
+	asks.push_front(std::deque<Order>{Order(false, 10.05f, 0.f)});	
 	asks.push_front(std::deque<Order>{Order(false, 10.04f, 8000.f)});
 	asks.push_front(std::deque<Order>{Order(false, 10.02f, 10000.f) });
 	res = OrderBook(bids, asks);

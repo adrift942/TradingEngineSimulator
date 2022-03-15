@@ -23,9 +23,6 @@ public:
 	/*Get price of the lowest ask in the book*/
 	float GetBestAskPrice() const;
 
-	/*Check if the order ID exists in the book*/
-	bool OrderExists(const OrderId& orderId) const;
-
 	/*Insert an order in the order book, The order is executed if marketable, the remaining unfilled amount is inserted as a pending order.*/
 	void InsertOrder(const Order& i_order);
 	
@@ -66,6 +63,5 @@ private:
 
 	bool m_isTest = false;
 
-public:
 	std::map<OrderId, Order> m_ordersMap; /*Auxiliary map for faster lookup of orders in the orderbook*/
 };

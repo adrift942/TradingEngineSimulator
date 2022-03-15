@@ -27,21 +27,9 @@ float OrderBook::GetBestAskPrice() const
 	return m_asks.front().front().price;
 };
 
-bool OrderBook::OrderExists(const OrderId& orderId) const
-{
-	return m_ordersMap.count(orderId) > 0;
-}
-
 void OrderBook::InsertOrder(const Order& i_order)
 {
 	auto order = i_order;
-
-	if (!OrderExists(i_order.id))
-	{
-		// In this case the order has been canceled before being inserted
-		OrderUpdate orderUpdate{ order.clientId, OrderUpdateType::Canceled, order };
-		Notify(orderUpdate);
-	}
 
 	// Execute order if it is marketable
 	ExecuteOrder(order);
@@ -69,58 +57,56 @@ bool OrderBook::AmendOrder(const OrderId& orderId, const Order& i_order)
 
 bool OrderBook::CancelOrder(const OrderId& orderId)
 {
-	if (!OrderExists(orderId))
-		return false;
-
 	const auto order = m_ordersMap[orderId];
 	m_ordersMap.erase(orderId);
-		
-	auto it = m_bids.begin();
-	if (!order.isBuy)
-		it = m_asks.begin();
 
-	auto prevIt = it; // auxiliary iterator
-
-	// cycle over price lines until the order price is found
-	while (order.price != it->front().price)
+	bool found = false;
+	if (order.isBuy)
 	{
-		prevIt = it;
-		it++;
-	}
-
-	// cycle over the current line until the order id is found, and erase it
-	for (auto queueit = it->begin(); queueit != it->end(); queueit++)
-	{
-		if (queueit->id == order.id)
+		for (auto it = m_bids.begin(); it != m_bids.end(); it++)
 		{
-			queueit->amount = 0;
-			break;
+			if (it->front().price == order.price)
+			{				
+				for (auto queueit = it->begin(); queueit != it->end(); queueit++)
+				{
+					if (queueit->id == order.id)
+					{
+						queueit->amount = 0;
+						queueit->unfilledAmount = 0;
+						found = true;
+						break;
+					}
+				}
+				break;
+			}
+		}
+	}
+	else
+	{
+		for (auto it = m_asks.begin(); it != m_asks.end(); it++)
+		{
+			if (it->front().price == order.price)
+			{
+				for (auto queueit = it->begin(); queueit != it->end(); queueit++)
+				{
+					if (queueit->id == order.id)
+					{
+						queueit->amount = 0;
+						queueit->unfilledAmount = 0;
+						found = true;
+						break;
+					}
+				}
+				break;
+			}
 		}
 	}
 
-	// remove price line if empty
-	//if (it->empty())
-	//{
-	//	if (order.isBuy)
-	//	{
-	//		if (it == prevIt)
-	//			m_bids.pop_front();
-	//		else
-	//			m_bids.erase_after(prevIt);
-	//	}
-	//	else
-	//	{
-	//		if (it == prevIt)
-	//			m_asks.pop_front();
-	//		else
-	//			m_asks.erase_after(prevIt);
-	//	}
-	//}
 
 	// notify client that the order has been canceled
 	OrderUpdate orderUpdate{ order.clientId, OrderUpdateType::Canceled, order};
 	Notify(orderUpdate);
-	return true;
+	return found;
 }
 
 void OrderBook::SetCallback(std::function<void(std::shared_ptr<OrderUpdate>)> callback)
@@ -284,7 +270,6 @@ void OrderBook::ExecuteOrder(Order& order)
 void OrderBook::InsertPendingOrder(Order& order)
 {
 	// insert pending order in the book according to price-time priority
-
 	if (order.isBuy)
 	{		
 		if (order.price > GetBestBidPrice())
