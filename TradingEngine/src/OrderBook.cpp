@@ -93,29 +93,29 @@ bool OrderBook::CancelOrder(const OrderId& orderId)
 	{
 		if (queueit->id == order.id)
 		{
-			it->erase(queueit);
+			queueit->amount = 0;
 			break;
 		}
 	}
 
 	// remove price line if empty
-	if (it->empty())
-	{
-		if (order.isBuy)
-		{
-			if (it == prevIt)
-				m_bids.pop_front();
-			else
-				m_bids.erase_after(prevIt);
-		}
-		else
-		{
-			if (it == prevIt)
-				m_asks.pop_front();
-			else
-				m_asks.erase_after(prevIt);
-		}
-	}
+	//if (it->empty())
+	//{
+	//	if (order.isBuy)
+	//	{
+	//		if (it == prevIt)
+	//			m_bids.pop_front();
+	//		else
+	//			m_bids.erase_after(prevIt);
+	//	}
+	//	else
+	//	{
+	//		if (it == prevIt)
+	//			m_asks.pop_front();
+	//		else
+	//			m_asks.erase_after(prevIt);
+	//	}
+	//}
 
 	// notify client that the order has been canceled
 	OrderUpdate orderUpdate{ order.clientId, OrderUpdateType::Canceled, order};
@@ -204,6 +204,18 @@ void OrderBook::ExecuteOrder(Order& order)
 		{
 			executed = true;
 			Order& bestAskOrder = m_asks.front().front();
+
+			// if order has been canceled, drop it
+			if (FloatEqual(bestAskOrder.amount, 0))
+			{
+				// if the best ask order has been completely filled, remove it
+				m_asks.front().pop_front();
+
+				// if there are no more ask orders at this price, remove this price
+				if (m_asks.front().empty())
+					m_asks.pop_front();
+			}
+
 			float tradeAmount = std::min(order.unfilledAmount, bestAskOrder.unfilledAmount);
 			order.unfilledAmount -= tradeAmount;
 			bestAskOrder.unfilledAmount -= tradeAmount;
@@ -229,6 +241,18 @@ void OrderBook::ExecuteOrder(Order& order)
 		{
 			executed = true;
 			Order& bestBidOrder = m_bids.front().front();
+
+			// if order has been canceled, drop it
+			if (FloatEqual(bestBidOrder.amount, 0))
+			{
+				// if the best ask order has been completely filled, remove it
+				m_bids.front().pop_front();
+
+				// if there are no more ask orders at this price, remove this price
+				if (m_bids.front().empty())
+					m_bids.pop_front();
+			}
+
 			float tradeAmount = std::min(order.unfilledAmount, bestBidOrder.unfilledAmount);
 			order.unfilledAmount -= tradeAmount;
 			bestBidOrder.unfilledAmount -= tradeAmount;
