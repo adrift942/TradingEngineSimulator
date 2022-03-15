@@ -105,8 +105,11 @@ bool OrderBook::CancelOrder(const OrderId& orderId)
 	}
 
 	// notify client that the order has been canceled
-	OrderUpdate orderUpdate{ order.clientId, OrderUpdateType::Canceled, order};
-	Notify(orderUpdate);
+	if (found)
+	{
+		OrderUpdate orderUpdate{ order.clientId, OrderUpdateType::Canceled, order};
+		Notify(orderUpdate);
+	}
 	return found;
 }
 
