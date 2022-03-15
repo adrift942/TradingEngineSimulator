@@ -122,6 +122,7 @@ void MatchingEngine::ProcessTransactionsQueue()
 		{
 			const auto& transaction = m_transactionsQueue->front();
 			m_transactionsQueue->pop_front();
+			m_trxCounter++;
 
 			switch (transaction.type)
 			{
@@ -135,6 +136,15 @@ void MatchingEngine::ProcessTransactionsQueue()
 				m_orderBook.CancelOrder(transaction.orderId);
 				break;
 			}
+		}
+		
+		auto now = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - start);
+		if (duration.count() >= 1000)
+		{
+			std::cout << "Processed " << m_trxCounter << " txs/sec" << std::endl;
+			m_trxCounter = 0;
+			start = std::chrono::high_resolution_clock::now();
 		}
 	}
 }

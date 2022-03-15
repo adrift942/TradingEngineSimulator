@@ -71,4 +71,6 @@ private:
 
 	std::map<ClientId, std::shared_ptr<IObserver>> m_clientMap{}; /*Map to notify the clients based on their ID*/
 	std::map<OrderId, ClientId> m_ordersOwnershipMap{}; /*Map to keep track of ownership of orders*/
+
+	uint64_t m_trxCounter = 0; /*To count the transactions processed per second*/
 };
